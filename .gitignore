@@ -1,0 +1,7 @@
+# Session-local Claude Code settings — never publish these in a repo meant to be cloned
+.claude/settings.local.json
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
