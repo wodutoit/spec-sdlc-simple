@@ -1,2 +1,11 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Shell scripts MUST stay LF, whatever the checkout platform.
+# These run as hooks via bash, including under Git Bash on Windows. A CRLF
+# checkout makes bash fail on the shebang or on trailing \r, and a hook that
+# fails does so quietly — so the merge guardrail would silently stop working.
+*.sh text eol=lf
+
+# Keep machine-read config stable across platforms too.
+*.json text eol=lf

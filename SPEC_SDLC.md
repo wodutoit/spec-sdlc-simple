@@ -1,9 +1,9 @@
 # SPEC_SDLC.md — Spec-Driven SDLC
 
-> **Drop this file into any repo.** It is self-contained: an AI agent that reads it
-> has everything needed to run the process. The `.claude/skills/` directory in the
-> [spec-sdlc-simple](https://github.com/wodutoit/spec-sdlc-simple) repo is optional
-> sugar that makes the stages trigger without being asked.
+> **This file is self-contained.** An agent that reads it has everything needed to run
+> the process, with no other tooling. In a Claude Code repo the same process ships as
+> the `sdlc` plugin, which makes each stage trigger without being asked — see the
+> [README](README.md) for setup.
 >
 > Based on Anthropic's [AI-Native SDLC Playbook](https://claude.com/blog/the-ai-native-sdlc-playbook).
 
@@ -40,6 +40,15 @@ Stage 8 closes the loop — an incident, a regression, or a support pattern beco
 new `intent.md` and re-enters at stage 1. It is where the process stops being a
 pipeline and becomes a cycle.
 
+### Outside the pipeline
+
+Stages 1–8 ship a feature. One stage acts on *the process itself* and does not
+participate in that loop:
+
+| Stage | Artifact | Who drives | Gate to advance |
+|-------|----------|-----------|-----------------|
+| **9 — Retro** | Recommendation + skill diff + eval results | Team | Change advisory board approves the release |
+
 ---
 
 ## Where artifacts live
@@ -64,11 +73,17 @@ specs/
 Repo-level files that support the process:
 
 ```
-CLAUDE.md                # conventions, commands, architecture, how to verify
-REVIEW.md                # what a review checks and at what severity
-SPEC_SDLC.md             # this file
-.claude/skills/          # optional: stage skills that auto-trigger
+CLAUDE.md                     # conventions, commands, architecture, how to verify
+REVIEW.md                     # what a review checks and at what severity
+.claude/spec-sdlc.json        # committed: which process version this repo runs
+.claude/skills/sdlc/          # gitignored: the process itself, a clone
 ```
+
+Those last two are the split that makes this work. `CLAUDE.md`, `REVIEW.md` and
+`specs/` are **per-repo and never sync** — they hold this repo's own knowledge. The
+process is a gitignored clone, so it updates with a pull instead of drifting. The
+committed lock file is what records which version of the process any given pull
+request was built under.
 
 **Naming:** four-digit sequence + kebab-case slug. The sequence is allocation order,
 not priority. Never renumber — links break.
@@ -563,9 +578,11 @@ actions and consent is per-change, not standing.
 > suggestion an agent can drift from. What actually binds it:
 > - **Branch protection** on `main` requiring PR + human code-owner approval. This
 >   is the real control.
-> - **`.claude/settings.json`** with a `permissions.deny` entry for merge commands
->   (`gh pr merge`, `git merge` onto protected branches).
-> - **A pre-tool hook** that blocks merge invocations and explains why.
+> - **A pre-tool hook** that blocks merge invocations and explains why. If you're using
+>   the `sdlc` plugin, this ships wired up — nothing to install.
+> - **`permissions.deny` entries** in `.claude/settings.json` for merge commands, as a
+>   second layer. These can't travel in a plugin, so they're a per-repo addition;
+>   `/sdlc:bootstrap` offers to merge them in.
 >
 > Do the branch protection at minimum. The doc alone binds nothing.
 
@@ -645,6 +662,69 @@ that can recur wasn't finished.
 
 ---
 
+## Stage 9 — Retro
+
+**Purpose:** improve the process itself. Stages 1–8 ship a feature; this one ships a
+change to how features get shipped.
+
+A skill or guidance edit changes behaviour in **every** repo running the process. By
+this document's own tiering that is closer to Tier 1 than Tier 3, so a retro produces
+evidence rather than an opinion, and a change advisory board — not the author, and not
+the AI — decides when it releases.
+
+**Trigger:** whatever the team chose at setup. On demand, after each feature ships, or
+on a cadence. Record the choice per repo rather than assuming one.
+
+### Evidence, not vibes
+
+The process generates its own telemetry. Read it:
+
+| Source | What it tells you |
+|---|---|
+| `BUILD_PLAN.md` amendment logs | Where plans were wrong → stage 4's guidance is wrong |
+| `TEST_REPORT.md` "Not covered" sections | The same gap recurring → spec §7 is missing a line |
+| Review findings appearing 3+ times | Promote to a rule |
+| Stages skipped, artifacts missing | That gate is too expensive, or asks the wrong question |
+| Track vs. actual effort | Track heuristics need work |
+| Repeated stop-and-ask points | Ambiguity in a stage's instructions |
+
+One occurrence is a quirk. Three is a process problem. Cite file and feature for each
+finding — an uncited finding is an opinion, and the board should reject it.
+
+### Two destinations
+
+- **Repo-specific** findings go to that repo's `CLAUDE.md`, as an ordinary change.
+- **Process-level** findings change the shared process and go through the board.
+
+Conflating them is how a shared process accumulates one team's quirks. A retro that
+finds nothing process-level is a good outcome, not a failed one.
+
+### What the board receives
+
+Three things together, because a proposal without evidence can't be assessed:
+
+1. **A recommendation document** — evidence with citations, findings, the proposed
+   change, repos affected, risk, and rollback.
+2. **The actual diff**, on a branch. Not an intention to change something.
+3. **Eval results** showing existing behaviour still holds. If the suite didn't cover
+   what changed, a new case is part of the change, not a follow-up.
+
+### Release, and the two-branch model
+
+Process work lands on the development branch by pull request. **Board approval is the
+merge into the release branch**, performed by a human. Repos track the release branch,
+so they only ever run approved process.
+
+**Rollback** is reverting that merge; repos pick it up on their next update.
+
+Keep the diff as small as the finding justifies. A retro that rewrites six stages is
+several changes pretending to be one, and nobody can assess it.
+
+**Artifact:** a recommendation document, a pull request, and eval output — held with
+the process, not in the product repo.
+
+---
+
 ## The two supporting files
 
 ### `CLAUDE.md` — repo context
@@ -680,11 +760,17 @@ The AI never merges a PR.
 Grow the "common mistakes" section from real review findings. When the same
 correction happens three times, it belongs here.
 
-### `.claude/settings.json` — the actual guardrails
+### `.claude/settings.json` — the local guardrails
 
-Permissions and hooks are what enforce the process. Markdown documents it; settings
-binds it. At minimum: deny merge commands, deny writes to protected paths, and
-pre-approve the safe inner-loop operations so the process doesn't drown in prompts.
+Markdown documents the process; hooks and permissions bind it.
+
+The hooks are the enforcing layer, and they travel with the process. Permissions do
+not — a plugin manifest can't carry them — so `permissions.deny` entries are a per-repo
+addition: deny merge commands, deny reads of secret files, and pre-approve the safe
+inner-loop operations so the process doesn't drown in prompts.
+
+Neither is the real control. Branch protection on the remote is, because it holds when
+the agent runs somewhere these files don't.
 
 ---
 

@@ -46,11 +46,15 @@ services not to call from here.>
 
 ## Process
 
-This repo follows `SPEC_SDLC.md`.
+This repo follows the spec-driven SDLC, provided by the `sdlc` plugin cloned at
+`.claude/skills/sdlc/` (gitignored). `.claude/spec-sdlc.json` records which version of
+the process this repo runs, and its `config` block holds our per-repo answers.
 
 - Features live in `specs/NNNN-slug/` with `intent.md`, `spec.md`, `design.md`,
   `BUILD_PLAN.md`, `build/NN-*.md`, `TEST_REPORT.md`.
 - The stage's artifact is the handoff. No artifact, no stage completion.
+- Start with `/sdlc` if you're unsure which stage applies.
 - Review policy: `REVIEW.md`.
+- Update the process with `/sdlc:bootstrap --relock` — never by editing the clone.
 - Ask before committing. Ask before opening a PR.
 - **The AI never merges a pull request.**
