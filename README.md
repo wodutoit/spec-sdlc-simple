@@ -1,12 +1,12 @@
 # spec-sdlc-simple
 
-A spec-driven SDLC you can drop into any repo. Eight stages, one named artifact per
-stage, committed to version control. The artifact is the handoff.
+A spec-driven SDLC you can add to any repo. Nine stages, one named artifact per stage,
+committed to version control. The artifact is the handoff.
+
+Ships as a Claude Code plugin so each stage triggers without being asked, and as
+[`SPEC_SDLC.md`](SPEC_SDLC.md) — one self-contained file that works with any agent.
 
 Based on Anthropic's [AI-Native SDLC Playbook](https://claude.com/blog/the-ai-native-sdlc-playbook).
-
-**Start here: [`SPEC_SDLC.md`](SPEC_SDLC.md)** — the whole process in one
-self-contained file.
 
 ---
 
@@ -14,153 +14,186 @@ self-contained file.
 
 The bottleneck in AI-assisted development is no longer writing code. It's knowing
 whether the code being written is the right code. So intent and requirements move to
-the front, into durable files, and each stage can't start until the previous one's
+the front, into durable files, and a stage can't start until the previous one's
 artifact exists.
 
-| # | Stage | Artifact |
-|---|-------|----------|
-| 1 | Intent | `intent.md` — the problem, before anyone solutions it |
-| 2 | Requirements | `spec.md` — functional, security, governance, stack, testing, local dev, CI/CD |
-| 3 | Design | `design.md` — flows, screens, every state, copy, accessibility |
-| 4 | Plan | `BUILD_PLAN.md` (phased checklist) + `build/NN-*.md` (how the code gets written) |
-| 5 | Build | Code + ticked checkboxes, self-verified per phase |
-| 6 | Test | `TEST_REPORT.md` — evidence per acceptance criterion |
-| 7 | Deploy | A pull request. **The AI never merges it.** |
-| 8 | Maintain | Production feedback becomes a new `intent.md` |
+| # | Stage | Artifact | Skill |
+|---|-------|----------|-------|
+| 1 | Intent | `intent.md` — the problem, before anyone solutions it | `/sdlc:intent` |
+| 2 | Requirements | `spec.md` — functional, security, governance, stack, testing, local dev, CI/CD | `/sdlc:requirements` |
+| 3 | Design | `design.md` — flows, screens, every state, copy, accessibility | `/sdlc:design` |
+| 4 | Plan | `BUILD_PLAN.md` + `build/NN-*.md` | `/sdlc:plan` |
+| 5 | Build | Code + ticked checkboxes, self-verified per phase | `/sdlc:build` |
+| 6 | Test | `TEST_REPORT.md` — evidence per acceptance criterion | `/sdlc:test` |
+| 7 | Deploy | A pull request. **The AI never merges it.** | `/sdlc:deploy` |
+| 8 | Maintain | Production feedback becomes a new `intent.md` | `/sdlc:intent` |
 
-Three size tracks keep it proportionate — a typo fix doesn't get an eight-stage pass.
+Stages 1–8 ship a feature. One more acts on the process itself:
+
+| Stage | What it does | Skill |
+|---|---|---|
+| 9 — Retro | Improves the skills, gated by a change advisory board | `/sdlc:retro` |
+
+Three size tracks keep it proportionate — a typo fix doesn't get a nine-stage pass.
 
 ---
 
-## Install
+## How it's distributed
 
-### Minimum — one file
+The process is a **gitignored clone inside your repo**, not copied files:
+
+```
+your-product-repo/
+  .claude/skills/sdlc/       ← gitignored: the process, a git clone
+  .claude/spec-sdlc.json     ← committed: which process version this repo runs
+  CLAUDE.md                  ← yours, never synced
+  REVIEW.md                  ← yours, never synced
+  specs/0001-*/              ← yours, never synced
+```
+
+That split is the whole design. `CLAUDE.md`, `REVIEW.md` and `specs/` hold *this
+repo's* knowledge and must not sync. The process is a clone, so it updates with a pull
+instead of drifting. And because an in-place plugin has no version identity Claude
+Code records, the committed lock file is the only thing that says which process version
+produced a given pull request — which is what makes the audit trail work.
+
+Two branches:
+
+| Branch | Purpose |
+|---|---|
+| `main` | Development. Retro pull requests land here. |
+| `release` | What product repos clone. **A merge into it is a board decision**, made by a human. |
+
+So a repo only ever runs process that has been approved.
+
+---
+
+## Setup
+
+### 1. Clone the process
 
 ```bash
-curl -O https://raw.githubusercontent.com/wodutoit/spec-sdlc-simple/main/SPEC_SDLC.md
+git clone -b release https://github.com/wodutoit/spec-sdlc-simple .claude/skills/sdlc
 ```
 
-That's genuinely enough. Point your agent at it and the process runs. Add a line to
-your `CLAUDE.md`:
+PowerShell is the same command — `git` handles the path.
 
-```markdown
-## Process
-This repo follows `SPEC_SDLC.md`. The AI never merges a pull request.
-```
+### 2. Trust the workspace
 
-### Recommended — file + skills
+Restart Claude Code from the **repository root** and accept the trust dialog. A
+project-scope skills-directory plugin isn't loaded until the workspace is trusted. Then
+`/reload-plugins`, or just relaunch.
 
-The skills make each stage trigger without you having to ask for it. Claude Code
-loads `.claude/skills/` from the repo it's running in, so they have to be **copied
-into** your project — referencing this repo from elsewhere won't load them.
-
-macOS / Linux:
+Check it worked:
 
 ```bash
-git clone --depth 1 https://github.com/wodutoit/spec-sdlc-simple /tmp/spec-sdlc
-cp /tmp/spec-sdlc/SPEC_SDLC.md .
-mkdir -p .claude/skills
-cp -r /tmp/spec-sdlc/.claude/skills/* .claude/skills/
-cp -r /tmp/spec-sdlc/templates .
+claude plugin list
 ```
 
-Windows PowerShell:
+You want `sdlc@skills-dir` with `Status: ✔ enabled`. If you instead see *"not loaded
+because this workspace was not trusted"*, the trust dialog hasn't been accepted yet.
 
-```powershell
-$src = Join-Path $env:TEMP 'spec-sdlc'
-git clone --depth 1 https://github.com/wodutoit/spec-sdlc-simple $src
-Copy-Item "$src\SPEC_SDLC.md" .
-New-Item -ItemType Directory -Force .claude\skills | Out-Null
-Copy-Item "$src\.claude\skills\*" .claude\skills\ -Recurse
-Copy-Item "$src\templates" . -Recurse
+### 3. Bootstrap
+
+```
+/sdlc:bootstrap
 ```
 
-Eight skills land: `spec-sdlc` (the router, which works out what stage you're in) plus
-one per stage.
+It gitignores the clone, asks your team a few questions (retro cadence, protected
+branches, your one test command, default review tier), writes the lock file, and seeds
+`CLAUDE.md` and `REVIEW.md`.
 
-### Then make the merge rule real
+### 4. Turn on branch protection
 
-`SPEC_SDLC.md` says the AI never merges. A markdown file is a suggestion an agent can
-drift from. What actually binds it:
+Protect `main`: require a pull request and code-owner approval.
 
-1. **Branch protection on `main`**, requiring a pull request and code-owner approval.
-   This is the control — it holds regardless of which agent, which machine, or which
-   settings file is loaded. Do this one at minimum.
-2. **`templates/hooks/block-merge.sh`** — a `PreToolUse` hook that blocks merges,
-   force pushes, protected-branch pushes and `--no-verify`, and tells the agent why.
-   Copy to `.claude/hooks/`, then `chmod +x`. On Windows it runs under Git Bash, which
-   ships with Git for Windows. This is the reliable local layer: it inspects the actual
-   command string rather than relying on pattern matching.
-3. **`templates/settings.json`** — merge into your `.claude/settings.json`. Denies the
-   obvious merge commands and asks before commit, push and PR creation. Permission
-   pattern syntax varies between Claude Code versions, so treat these entries as a
-   convenience on top of the hook rather than the thing you depend on, and confirm
-   they load cleanly in your version.
+The plugin ships a hook that blocks `gh pr merge`, `git merge`, force pushes,
+protected-branch pushes and `--no-verify`. **That is a backstop, not the control.** It
+only holds where it's installed; branch protection holds everywhere. Do both, and if
+you only do one, do this one.
 
-The `allow` list in `settings.json` is there so the process doesn't drown in prompts
-on safe read-only git operations. Trim or extend it to match your repo's commands.
+---
+
+## Staying current
+
+```
+/sdlc:bootstrap --relock
+```
+
+Pulls the release branch and updates the lock in one action, so the two can't drift.
+Use `--reconfigure` to change the per-repo answers without touching the lock.
+
+You don't have to remember: a `SessionStart` hook tells you when the process is behind,
+when the lock is stale, or — loudly — when the clone is on a branch that was never
+approved for release.
+
+---
+
+## Improving the process
+
+`/sdlc:retro` reads the evidence your own artifacts generate — plan amendment logs,
+recurring "Not covered" entries, findings that keep reappearing, gates that keep being
+skipped — and turns patterns into a proposal.
+
+It works in a git worktree, never editing the process while it's running, then hands the
+board three things together: a recommendation document with cited evidence, the actual
+diff, and eval results showing existing behaviour still holds. Board approval is the
+`main` → `release` merge, performed by a human.
+
+Rollback is reverting that merge.
+
+---
+
+## Without Claude Code
+
+[`SPEC_SDLC.md`](SPEC_SDLC.md) is the entire process in one file, with every artifact
+template inline. Drop it in, point any agent at it, done — no plugin, no clone, no
+updates.
+
+```bash
+curl -O https://raw.githubusercontent.com/wodutoit/spec-sdlc-simple/release/SPEC_SDLC.md
+```
+
+You lose automatic stage triggering, the merge hook, the staleness check and the retro
+loop. You keep the process.
 
 ---
 
 ## What's in here
 
 ```
-SPEC_SDLC.md                   The process. Self-contained. This is the deliverable.
-README.md                      You are here.
+SPEC_SDLC.md              The process in one self-contained file
+SKILL.md                  The router — works out which stage you're in
+CHANGELOG.md              One entry per board-approved release. Read before relocking.
+CONTRIBUTING.md           How to work on the process, and what was learned building it
 
-.claude/skills/
-  spec-sdlc/                   Router — works out the current stage, routes onward
-  sdlc-intent/                 Stage 1
-  sdlc-requirements/           Stage 2
-  sdlc-design/                 Stage 3
-  sdlc-plan/                   Stage 4
-  sdlc-build/                  Stage 5
-  sdlc-test/                   Stage 6
-  sdlc-deploy/                 Stage 7
-
-templates/
-  intent.md                    Stage 1 artifact
-  spec.md                      Stage 2 artifact — the 12-section checklist
-  design.md                    Stage 3 artifact
-  BUILD_PLAN.md                Stage 4 — phased checklist
-  build-phase.md               Stage 4 — per-phase build detail
-  TEST_REPORT.md               Stage 6 artifact
-  REVIEW.md                    Review policy, for repo root
-  CLAUDE.md                    Repo context skeleton, for repo root
-  settings.json                Permissions + hook wiring
-  hooks/block-merge.sh         The merge-blocking hook
+.claude-plugin/plugin.json
+skills/                   intent, requirements, design, plan, build, test, deploy,
+                          retro, bootstrap
+hooks/hooks.json          Wires both hooks — nothing to install by hand
+scripts/
+  block-merge.sh          Blocks merges, force pushes, protected-branch pushes
+  check-staleness.sh      Reports drift between the lock and the clone
+templates/                7 artifact skeletons, plus CLAUDE.md / REVIEW.md / settings.json
+evals/                    Regression guard — see evals/README.md
+retro/                    Retro recommendations, one per board proposal
 ```
 
 ---
 
-## Using it
+## Adopting gradually
 
-Once installed, this mostly runs itself:
+Don't switch all nine stages on at once. Stages are ordered by dependency and Intent
+has no prerequisites.
 
-- *"I want to add user invites"* → the router picks stage 1, interviews you, proposes
-  a track, writes `intent.md`.
-- *"what stage am I in?"* → the router reads `specs/` and tells you.
-- *"let's build it"* → stage 5 works one phase at a time and won't advance until the
-  phase's done-test passes.
-- *"ship it"* → stage 7 asks before committing, asks before the PR, opens the PR, and
-  stops.
-
-You can also drive it directly: `/sdlc-requirements`, `/sdlc-plan`, and so on.
-
----
-
-## Adopting it gradually
-
-Don't switch all eight stages on at once. The stages are ordered by dependency and
-Intent has no prerequisites, so:
-
-1. `SPEC_SDLC.md` + one real `intent.md`. See how it feels.
-2. `CLAUDE.md` — fastest payoff of anything here, and cheap.
-3. Stage 2 on your next real feature. This is where most of the value is.
+1. Set up, write one real `intent.md`. See how it feels.
+2. `CLAUDE.md` — fastest payoff here, and cheap.
+3. Stage 2 on your next real feature. Most of the value is here.
 4. Stage 4 — `BUILD_PLAN.md` committed *before* the code.
-5. Branch protection and the merge rule.
+5. Branch protection.
 6. Stages 6 and 7, then `REVIEW.md`.
-7. Stage 8 once you have monitoring worth reacting to.
+7. Stage 8 once you have monitoring worth reacting to; stage 9 once you have enough
+   artifacts to find patterns in.
 
 **Working:** less rework after build starts, higher first-pass merge rate, fewer
 "that's not what I meant" moments.
@@ -173,15 +206,17 @@ being the handoff and became a formality.
 
 ## Notes
 
-- The playbook collapses requirements and design into one stage; this splits them into
-  Requirements (2), Design (3), and Plan (4), because in practice they have different
-  participants and fail in different ways. Artifact names match the playbook where
-  they map, so the two are readable side by side.
-- Nothing here is tool-specific except `.claude/skills/` and `settings.json`.
-  `SPEC_SDLC.md` works with any agent that can read a file.
-- Organizations with their own security standards: stage 2 is where that check
-  belongs — before code exists, not at review time. `spec.md` §3 and §4 have a line
+- **Context cost.** Ten skills add roughly 700 tokens to every session where the plugin
+  is enabled, used or not. `claude plugin details sdlc` gives the current figure.
+- **Non-interactive sessions.** `-p` and SDK sessions never accept the trust dialog, so
+  the plugin doesn't auto-load there. Pass
+  `--plugin-dir .claude/skills/sdlc` to load it explicitly in CI.
+- **Organizational standards.** Stage 2 is where a standards or compliance check
+  belongs — before code exists, not at review time. `spec.md` §3 and §4 carry a line
   for the reference.
+- The playbook collapses requirements and design into one stage; this splits them into
+  Requirements, Design and Plan, because in practice they have different participants
+  and fail in different ways. Artifact names match the playbook where they map.
 
 ## Licence
 
