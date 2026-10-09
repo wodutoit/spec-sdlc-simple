@@ -71,6 +71,8 @@ New dependencies — pin versions, check CVEs, check licence compatibility:
 - **Unit:** <what must be covered; any threshold>
 - **Integration:** <which boundaries get real tests — data access, APIs, queues>
 - **End-to-end:** <which user journeys>
+- **How the §12 scenarios are run:** <automated through a BDD runner (name it), or
+  automated as ordinary tests that cite the scenario, or manual — and which>.
 - **Security tests:** <invalid token, expired session, unauthorized access, injection
   payloads, boundary conditions — required for anything Tier 1>
 - **Performance tests:** <if any, against what target>
@@ -110,7 +112,71 @@ New dependencies — pin versions, check CVEs, check licence compatibility:
 
 ## 12. Acceptance criteria
 
-The checklist that says this feature is done. Each line maps to an FR.
+Gherkin scenarios — the contract that says this feature is done. Stage 6 validates the
+build against exactly these, so a person approves them before the process moves on.
 
-- [ ] <criterion>
-- [ ] <criterion>
+**Acceptance status:** draft | approved
+**Approved by:** <name and role, as the approver stated it — never the AI>
+**Approved on:** <YYYY-MM-DD>
+**Approved via:** <PR review / chat confirmation / meeting — where the record lives>
+
+> The AI drafts these as `draft` and **never sets `approved` itself**. Changing any
+> scenario after approval — add, edit or remove — sets the status back to `draft` and
+> needs re-approval. Log it under [Amendments](#amendments-after-approval).
+
+```gherkin
+Feature: <feature name>
+  <One line: who benefits, and what they can now do.>
+
+  Background:
+    Given <state shared by every scenario below>
+
+  @FR-1
+  Scenario: <the behaviour, in business language>
+    Given <the context>
+    When <the one action>
+    Then <the observable outcome>
+    And <a further outcome>
+
+  @FR-2 @error
+  Scenario: <what goes wrong, and how it is handled>
+    Given <the context>
+    When <the action>
+    Then <the specific, user-visible handling>
+
+  @FR-3 @boundary
+  Scenario Outline: <the same behaviour across several values>
+    Given <the context>
+    When <the action> with "<input>"
+    Then <the outcome> is "<result>"
+
+    Examples:
+      | input | result |
+      | <min> | <ok>   |
+      | <max+1> | <rejected> |
+```
+
+Rules for writing them:
+
+- **One behaviour per scenario, one `When`.** Two actions is two scenarios.
+- **Declarative, not procedural.** "When the admin removes Sam", not "When I click the
+  red button". The design stage decides the UI; the scenario must survive it changing.
+- **Concrete values.** "within 300 ms", "a 401", "after 7 days" — never "quickly" or
+  "an error".
+- **Tag every scenario with the FR it proves** (`@FR-3`). Every FR has at least one
+  scenario; a scenario with no FR is either scope creep or a missing requirement.
+- **Cover the unhappy paths.** For each FR: invalid input, not permitted, boundary,
+  dependency down, concurrent action, empty state. Every threat named in §3 becomes a
+  `@security` scenario — they are the security tests stage 6 runs.
+- **Business language, named roles.** "an admin", not "the system" or "the user".
+- **No implementation.** No routes, SQL or class names, unless the interface *is* the
+  requirement, in which case a status code is fine.
+- **Where they live.** Inline here. If the repo runs them through a BDD runner, the
+  `.feature` files become the single source and this section links to them. Never keep
+  two copies.
+
+### Amendments after approval
+
+| Date | Change to scenarios | Why | Re-approved by |
+|---|---|---|---|
+| | | | |

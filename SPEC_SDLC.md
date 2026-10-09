@@ -28,11 +28,11 @@ intent and requirements into durable files is what makes fast code generation sa
 | # | Stage | Artifact | Who drives | Gate to advance |
 |---|-------|----------|-----------|-----------------|
 | 1 | **Intent** | `intent.md` | Originator + AI | Problem and outcome stated in one paragraph each; no solution detail |
-| 2 | **Requirements** | `spec.md` | Product + team + AI | Every checklist section answered or explicitly marked N/A |
+| 2 | **Requirements** | `spec.md` | Product + team + AI | Every checklist section answered or marked N/A; **acceptance scenarios approved by a named person** |
 | 3 | **Design** | `design.md` + `design/` artifacts | Design + AI | Artifact fidelity agreed; every screen/flow and state described; brand decisions resolved |
 | 4 | **Plan** | `BUILD_PLAN.md` + `build/NN-*.md` | Engineer + AI | Phases independently verifiable; each has a stated done-test |
 | 5 | **Build** | Code + checked-off plan | AI, engineer reviews | All phase checkboxes ticked; self-verification passing |
-| 6 | **Test** | `TEST_REPORT.md` | AI, engineer reviews | Stated quantifiable target met; evidence attached |
+| 6 | **Test** | `TEST_REPORT.md` | AI, engineer reviews | Validated against the **approved** scenarios, none changed since; target met; evidence attached |
 | 7 | **Deploy** | PR (never a merge) | AI proposes, human decides | Human approval on PR; **AI never merges** |
 | 8 | **Maintain** | New `intent.md` | Monitoring / AI / anyone | Loops back to stage 1 |
 
@@ -106,6 +106,9 @@ ceiling — anyone can ask for more rigour, nobody may quietly take less.
 | **S — Small** | Bug fix, copy change, dependency bump, refactor with no behaviour change | 1 (3 lines), 5, 6, 7 | 2, 3, 4 |
 | **M — Medium** | New endpoint, new screen, change to an existing feature's behaviour | 1, 2, 4, 5, 6, 7 | 3 unless user-facing |
 | **L — Large** | New product, new subsystem, anything touching auth/payments/PII, anything with a migration | All 8 | None |
+
+Track S has no spec, so no Gherkin scenarios to approve: stage 6 validates against the
+outcome stated in `intent.md` and says so in the report.
 
 **Who decides:** whoever opens the intent proposes the track; the reviewer on the
 eventual PR can reject the work for being under-tracked. Two forced escalations to L
@@ -188,6 +191,38 @@ This is also the stage where organizational standards checks belong — the secu
 data-handling, and compliance sections below are exactly the topics that have
 standards. Check them here, before any code exists, not at review time.
 
+### Acceptance criteria are Gherkin scenarios, and a person approves them
+
+Section 12 is not a checklist. It is a set of **scenarios** in `Given / When / Then`,
+because they are the contract stage 6 validates against, and a line like "invites work"
+can't be validated by anyone.
+
+- **One behaviour per scenario, one `When`.**
+- **Declarative:** "When the admin removes Sam", not "When I click the red button".
+  Stage 3 decides the UI; the scenario must survive it changing.
+- **Concrete values:** "within 300 ms", "a 401", "after 7 days" — never "quickly".
+- **Tag each with the FR it proves** (`@FR-3`). Every FR gets at least one; a scenario
+  proving no FR is scope creep or a missing requirement.
+- **Write the unhappy paths:** invalid input, not permitted, boundary, dependency down,
+  concurrent action, empty state. Every threat in section 3 becomes a `@security`
+  scenario.
+- **`Scenario Outline` + `Examples`** for one behaviour over several values.
+- **No implementation detail** unless the interface itself is the requirement.
+
+Settle in section 7 how they will be run: a BDD runner, ordinary tests that cite the
+scenario, or manual.
+
+**Approval is a human act.** The AI drafts the scenarios with
+`Acceptance status: draft` and **never sets `approved` itself**. A named person does —
+at minimum the decision owner for scope, and for a Tier 1 or 2 change also the owner
+named for security or engineering. The record says who, when, and where (PR review,
+chat, meeting). If the approver isn't present, the stage is **blocked on approval**,
+which is a correct outcome.
+
+Once approved the scenarios are frozen. Any add, edit or removal sets the status back to
+`draft`, goes in the amendment log, and needs re-approval. Commit the approved state, so
+stage 6 can tell what was approved.
+
 **Artifact:** `specs/NNNN-slug/spec.md`. If it grows past roughly 500 lines, split
 it — `spec.md` plus `spec-security.md`, `spec-data.md` — and keep `spec.md` as the
 index.
@@ -252,6 +287,8 @@ New dependencies — pin versions, check CVEs, check licence:
 - Unit: <what must be covered; any threshold>
 - Integration: <which boundaries — data access, APIs — get real tests>
 - End-to-end: <which user journeys>
+- How the section 12 scenarios are run: <BDD runner, ordinary tests citing the
+  scenario, or manual>
 - Security tests: <invalid token, expired session, unauthorized access,
   injection payloads, boundary conditions — required for anything Tier 1>
 - Performance tests: <if any, and against what target>
@@ -286,13 +323,34 @@ New dependencies — pin versions, check CVEs, check licence:
 |---|---|---|---|---|
 
 ## 12. Acceptance criteria
-The checklist that says this feature is done. Each line maps to an FR.
-- [ ] ...
+Acceptance status: draft | approved
+Approved by: <name, role — never the AI>   Approved on: <date>   Approved via: <where>
+
+```gherkin
+Feature: <name>
+  Background:
+    Given <state shared by every scenario>
+
+  @FR-1
+  Scenario: <the behaviour, in business language>
+    Given <context>
+    When <the one action>
+    Then <the observable outcome>
+
+  @FR-2 @error
+  Scenario: <what goes wrong, and how it is handled>
+    ...
+```
+
+### Amendments after approval
+Date | change to scenarios | why | re-approved by
 ````
 
 **Gate:** every section answered or `N/A because…`. All stage-1 open questions
-resolved or promoted to section 11 with an owner. Decision owners signed off.
-Committed.
+resolved or promoted to section 11 with an owner. Every FR has a scenario, every
+scenario cites an FR, every section 3 threat has a `@security` scenario. **Section 12 is
+`Acceptance status: approved` by a named person who is not the AI.** Decision owners
+signed off on the rest. Committed.
 
 ---
 
@@ -301,7 +359,8 @@ Committed.
 **Purpose:** decide what the user actually sees and touches, before code hardens the
 wrong choice. Skippable on track S, and on track M when nothing is user-facing.
 
-**Input:** `spec.md`.
+**Input:** `spec.md`, with section 12 `Acceptance status: approved`. If it is still
+`draft`, stop and send the user back to stage 2.
 
 **The AI's job:** push past "make it look nice." Usable and beautiful are separate
 questions and both need answering. Work through every state, not just the happy one —
@@ -448,7 +507,8 @@ measured against the real palette. Every `design/` file indexed. Committed.
 it is written. Two artifacts: a phased checklist for tracking, and detailed build
 files the AI actually executes against.
 
-**Input:** `spec.md`, `design.md`, and the existing codebase.
+**Input:** `spec.md` (section 12 `Acceptance status: approved` — if it is still `draft`,
+stop and go back to stage 2), `design.md`, and the existing codebase.
 
 **The AI's job:** read the codebase first — actually read it, don't assume. Then
 propose phases. A good phase is independently verifiable: at the end of it something
@@ -576,13 +636,30 @@ tests, no skipped assertions, no TODO where a requirement should be.
 **Purpose:** verify against the spec, not against the plan. The plan can be executed
 perfectly and still miss the requirement.
 
-**Input:** the code, `spec.md` section 12 (acceptance criteria), section 7 (testing
-requirements).
+**Input:** the code, `spec.md` section 12 (the Gherkin acceptance scenarios), section 7
+(testing requirements).
 
-**The AI's job:** run the one command from spec section 7. Then walk the acceptance
-criteria one at a time and produce evidence for each — not an assurance, evidence.
-Where a criterion can't be verified automatically, say so and say what manual check
-is needed.
+**First, check the criteria are the approved ones.** Stage 6 validates against approved
+acceptance criteria and nothing else.
+
+1. Section 12 must say `Acceptance status: approved`, with who, when and where filled
+   in. If it is `draft`, blank, or still a checklist, **stop**. Don't test, and don't
+   write a report that reads as a result. Send the user back to stage 2.
+2. The scenarios must be **unchanged since approval**. Find the approval commit
+   (`git log -S"Acceptance status: approved" -- specs/NNNN-slug/spec.md`) and diff it
+   against `HEAD`. Any hunk inside section 12 means they changed after approval: stop,
+   re-approval is needed. If the approval was never committed, say so.
+3. **Never edit a scenario to make it pass,** and never drop an inconvenient one. A
+   scenario that is genuinely wrong is an amendment: report it, leave the result FAIL or
+   blocked, and let a person re-approve a corrected one.
+
+Track S has no section 12; validate against the outcome in `intent.md` and say so.
+
+**The AI's job:** run the one command from spec section 7. Then validate **every
+approved scenario, one at a time**, and produce evidence for each — not an assurance,
+evidence. Scenarios validated must equal scenarios approved, so nothing was quietly
+dropped. Where a scenario can't be verified automatically, say so and say what manual
+check is needed. The `@security` scenarios are the security tests.
 
 Then go looking for what the tests don't cover: boundaries, concurrency, the error
 paths nobody exercises, what happens on second run.
@@ -593,6 +670,10 @@ paths nobody exercises, what happens on second run.
 # Test Report: <title>
 
 **Date:** <YYYY-MM-DD>   **Commit:** <sha>
+
+## Criteria validated against
+Section 12 status: approved. Approved by <name, role> on <date> via <where>.
+Approval commit <sha>; section 12 unchanged since. Scenarios approved / validated: n / n.
 
 ## Target
 <The quantifiable target from spec section 7. e.g. "all tests pass, coverage >= 80%
@@ -606,11 +687,13 @@ PASS | FAIL
 <actual output — the real thing, not a summary>
 ```
 
-## Acceptance criteria
+## Acceptance scenarios
 
-| # | Criterion | Verified by | Result |
+| Scenario (verbatim from section 12) | FR | Verified by | Result |
 |---|---|---|---|
-| 1 | ... | `test/...` or manual step | pass / fail |
+| ... | FR-1 | `test/...` or manual step | pass / fail |
+
+Totals: n scenarios — n pass, n fail, n manual.
 
 ## Security tests
 
@@ -634,8 +717,9 @@ Honest list of what isn't tested and what risk that leaves.
 |---|---|---|---|---|
 ````
 
-**Gate:** stated target met. Evidence attached. Defects either fixed or explicitly
-accepted by a named person.
+**Gate:** section 12 confirmed approved and unchanged since approval. Stated target met.
+Every approved scenario has a result with evidence, and the count matches. Defects
+either fixed or explicitly accepted by a named person.
 
 > **Fixing a failing test:** write the failing test *first*, confirm it fails for the
 > right reason, then fix the code. And don't let the agent edit the test file while

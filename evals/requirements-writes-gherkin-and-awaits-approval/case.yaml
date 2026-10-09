@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: requirements-writes-gherkin-and-awaits-approval
+tags: [requirements, acceptance]
+context:
+  # Stage 2 needs intent.md as its input. The prompt deliberately never mentions Gherkin
+  # or approval, so a baseline model has nothing to lean on and the Δ reflects the skill.
+  scaffold_script: fixture.sh

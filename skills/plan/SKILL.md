@@ -10,6 +10,10 @@ description: Stage 4 of the spec-driven SDLC. Use when spec.md exists and BUILD_
 **Read first:** `spec.md`, `design.md`, and **the actual codebase**. Read it — don't
 assume. Find the patterns you'll be asked to follow and note them by file and line.
 
+**Precondition:** `spec.md` §12 reads `Acceptance status: approved`. If it's `draft`, the
+acceptance criteria were never approved — stop and send the user back to
+`/sdlc:requirements`. (Track S has no spec and is exempt.)
+
 ## Two artifacts
 
 **A. `BUILD_PLAN.md`** — the phased checklist. Progress tracker; boxes get ticked in

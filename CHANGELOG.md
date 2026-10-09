@@ -21,9 +21,59 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ---
 
+## 0.3.0 — unreleased
+
+**Board decision:** pending
+
+### Changed
+
+- **Acceptance criteria are now Gherkin scenarios.** Stage 2 section 12 was a checklist
+  ("- [ ] invites work"), which nobody could validate. It is now `Given / When / Then`
+  scenarios: one behaviour and one `When` each, declarative rather than click-by-click,
+  concrete values, each tagged with the FR it proves (`@FR-3`). Every FR needs at least
+  one scenario, every scenario must cite an FR, and every threat in section 3 becomes a
+  `@security` scenario. Section 7 now records how the scenarios are run (BDD runner,
+  ordinary tests citing the scenario, or manual).
+- **A named person must approve the criteria, and the AI never does.** Section 12 carries
+  an `Acceptance status` block recording who approved, when, and where. The AI drafts as
+  `draft`. If the approver is not present the stage is *blocked on approval*, which is a
+  correct outcome rather than a failure. Once approved the scenarios are frozen: any
+  add, edit or removal returns the status to `draft`, goes in an amendment log, and needs
+  re-approval.
+- **Stage 6 validates against the approved criteria, and checks they are the approved
+  ones.** It stops, writing no report, if the status is not `approved` or the criteria
+  are still a checklist. It compares section 12 against the approval commit and stops if
+  any scenario changed since. It validates every approved scenario with evidence, checks
+  the count of validated equals approved, and never edits or drops a scenario to make it
+  pass; a wrong scenario is an amendment that needs re-approval.
+- **Stages 3 and 4 refuse to start on unapproved criteria**, and send the user back to
+  stage 2.
+- **Track S is exempt.** It skips stage 2, so there is no section 12 to approve; stage 6
+  validates against the outcome in `intent.md` and says so in the report.
+- `templates/TEST_REPORT.md` gains a "Criteria validated against" block (approver, date,
+  approval commit, unchanged-since check, approved/validated counts) and the acceptance
+  table is now per scenario with an FR column.
+
+### Fixed
+
+- The 0.2.1 entry's board-decision link still read `PR #__`. It is now PR #3.
+
+### Migration
+
+**This one has a cost.** A spec written before this release has a checklist in section
+12 and no approval status, and stage 6 will stop on it: a checklist is not Gherkin, and
+nobody approved it. Stages 3 and 4 will stop on it too.
+
+For a feature already in flight: convert section 12 to Gherkin scenarios tagged to the
+FRs, get a named person to approve them, and commit that state. There is deliberately no
+bypass, because a gate that can be skipped quietly is not a gate. Specs for features
+already shipped need no change.
+
+---
+
 ## 0.2.1 — 2026-10-09
 
-**Board decision:** released via [PR #__](https://github.com/wodutoit/spec-sdlc-simple/pull/__)
+**Board decision:** released via [PR #3](https://github.com/wodutoit/spec-sdlc-simple/pull/3), merged into `release` as `2f3c00e`.
 
 Documentation only. No skill, hook, template or eval behaviour changes, so there is
 nothing for a consuming repo to do beyond relocking.
