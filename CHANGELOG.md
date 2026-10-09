@@ -23,7 +23,7 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ## 0.2.0 — unreleased
 
-**Board decision:** pending — PR from `design/artifact-fidelity`
+**Board decision:** pending — landed on `main` in `3ef9fc5` without a PR; not yet merged into `release`
 
 ### Changed
 
