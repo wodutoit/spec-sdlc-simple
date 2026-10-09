@@ -21,9 +21,35 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ---
 
-## 0.2.0 — unreleased
+## 0.2.1 — 2026-10-09
 
-**Board decision:** pending — landed on `main` in `3ef9fc5` without a PR; not yet merged into `release`
+**Board decision:** released via [PR #__](https://github.com/wodutoit/spec-sdlc-simple/pull/__)
+
+Documentation only. No skill, hook, template or eval behaviour changes, so there is
+nothing for a consuming repo to do beyond relocking.
+
+### Fixed
+
+- `release` still described 0.2.0 as "unreleased" with the board decision "pending", and
+  0.1.0 as "not yet approved", although both had shipped. Both entries now carry their
+  release dates and the commits or PR that shipped them.
+
+### Changed
+
+- `CONTRIBUTING.md` release steps reordered so the version bump and changelog update
+  happen **in the release PR, before the merge**. Done afterwards, the edit lands on
+  `main` only and `release` — the branch product repos clone — keeps saying
+  "unreleased". That is what caused the fix above.
+
+### Migration
+
+None.
+
+---
+
+## 0.2.0 — 2026-10-09
+
+**Board decision:** approved — [PR #2](https://github.com/wodutoit/spec-sdlc-simple/pull/2), merged into `release` as `38a1f0f`. The change itself had landed on `main` in `3ef9fc5` without its own PR.
 
 ### Changed
 
@@ -76,9 +102,11 @@ that reaches Stage 3. A repo mid-way through Stage 3 can adopt them or finish as
 
 ---
 
-## 0.1.0 — unreleased
+## 0.1.0 — 2026-09-30
 
-First release. Not yet approved for `release`.
+**Board decision:** initial release — the first commit on `release`, `3a701bf`.
+
+First release.
 
 ### Added
 

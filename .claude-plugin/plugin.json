@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "sdlc",
   "displayName": "Spec-Driven SDLC",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A spec-driven SDLC: nine stages, one named artifact per stage, committed to version control. The artifact is the handoff, and the AI never merges a pull request.",
   "author": {
     "name": "wodutoit"
