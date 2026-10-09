@@ -4,6 +4,24 @@
 **Commit:** <sha>
 **Spec:** ./spec.md
 
+## Criteria validated against
+
+Stage 6 validates against **approved** acceptance criteria only. Confirm this before
+anything below means anything.
+
+| Check | Value |
+|---|---|
+| §12 `Acceptance status` | approved |
+| Approved by | <name, role> |
+| Approved on / via | <YYYY-MM-DD> / <PR review, chat, meeting> |
+| Approval commit | `<sha>` |
+| §12 unchanged since that commit | yes — `git diff <sha> HEAD` shows no hunk inside §12 |
+| Scenarios approved / validated | <n> / <n> |
+
+<If §12 was not approved, or changed after approval, do not complete this report. Stop
+and send the user back to the requirements stage. For a track S change there is no §12:
+say so here and name the `intent.md` outcome validated instead.>
+
 ## Target
 
 <The quantifiable target from spec section 7. e.g. "all tests pass, coverage >= 80%
@@ -21,17 +39,22 @@ Command: `<the one command>`
 <actual output — the real thing, pasted, not a summary of it>
 ```
 
-## Acceptance criteria
+## Acceptance scenarios
 
-Every line from spec section 12, with evidence. Not an assurance — evidence.
+Every scenario from spec §12, with evidence. Not an assurance — evidence. Do not edit,
+add or drop a scenario here: a scenario that is wrong is an amendment that needs
+re-approval, not a row to quietly change.
 
-| # | Criterion | Verified by | Result |
+| Scenario | FR | Verified by | Result |
 |---|---|---|---|
-| 1 | | `test/…` or <manual step> | pass / fail |
+| <scenario name, verbatim from §12> | FR-1 | `test/…` or <manual step> | pass / fail |
+
+**Totals:** <n> scenarios — <n> pass, <n> fail, <n> manual.
 
 ## Security tests
 
-Required for anything Tier 1. Extend for the threats named in spec section 3.
+Required for anything Tier 1. These are the `@security` scenarios from §12, plus any
+further threat named in spec section 3.
 
 | Case | Expected | Result |
 |---|---|---|

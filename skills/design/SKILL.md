@@ -12,6 +12,10 @@ description: Stage 3 of the spec-driven SDLC. Use when spec.md exists, the featu
 **Read first:** `spec.md` — especially the functional requirements and §2 accessibility
 and platform support.
 
+**Precondition:** `spec.md` §12 reads `Acceptance status: approved`. If it's `draft`, the
+acceptance criteria were never approved — stop and send the user back to
+`/sdlc:requirements`. (Track S has no spec and is exempt.)
+
 ---
 
 ## 1. Decide what gets produced — ask, don't assume

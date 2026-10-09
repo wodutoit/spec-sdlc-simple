@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: test-refuses-unapproved-criteria
+tags: [test, acceptance, integrity]
+context:
+  # A finished build whose acceptance criteria were never approved. The only thing
+  # wrong with this workspace is that one status line, which is what the case tests.
+  scaffold_script: fixture.sh
