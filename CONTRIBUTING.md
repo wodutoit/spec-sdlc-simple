@@ -34,19 +34,21 @@ Before opening a PR: `claude plugin validate . --strict` and `claude plugin eval
 ## Releasing
 
 1. PR into `main`, reviewed.
-2. **Before** the release merge, in the release PR itself: bump `version` in
-   `.claude-plugin/plugin.json`, and in `CHANGELOG.md` replace `unreleased` with the
-   intended release date and put the release PR's link on the "Board decision" line.
-3. Board approves → a human merges `main` into `release`.
+2. **In the release PR, before it merges:** bump `version` in `.claude-plugin/plugin.json`
+   and add a `CHANGELOG.md` entry headed with the version and the release date. Write the
+   entry as if it has shipped: no "unreleased", no "pending", no board-decision line.
+3. A human merges `main` into `release`. **That merge is the board's approval**, and the
+   merge commit on `release` is the record of it. Nothing in the docs needs to say so.
 4. Product repos pick it up with `/sdlc:bootstrap --relock`.
 
-**Why step 2 comes before the merge.** A changelog edited *after* the release merge
-lands on `main` only, so `release` — the branch product repos actually clone — keeps
-saying `unreleased` until the next release. This happened with 0.2.0: it shipped
-correctly but `release` still read "unreleased" and "pending". The cost is that the date
-and PR link are written before the merge happens, so use the release PR's own number
-and the date you expect to merge; if the board rejects it, the PR doesn't merge and the
-entry never lands.
+**Why nothing in the docs records approval.** A decision written down *after* the release
+merge can only land on `main`, so `release` — the branch product repos actually clone —
+keeps showing the old state until the next release. This happened with 0.2.0 and again
+with 0.3.0, both shipping marked "unreleased" and "pending". Putting the version bump and
+the dated entry in the release PR avoids it; leaving approval out of the docs entirely
+removes the thing that went stale.
+
+If the board rejects a release PR it simply doesn't merge, and the entry never lands.
 
 ---
 

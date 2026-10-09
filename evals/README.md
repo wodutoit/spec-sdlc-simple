@@ -83,6 +83,8 @@ For evidence going to a board, use `--runs 3` or more.
 | `typo-fix-gets-track-s` | Small work stays cheap — track S, stages 2–4 skipped | 1.00 | 0.00 | **+1.00** |
 | `auth-change-forced-to-track-l` | Auth or sessions force track L, however it's framed | 1.00 | 1.00 | 0.00 |
 | `requirements-refuses-blank-sections` | Stage 2 never leaves a spec section blank | 1.00 | 1.00 | 0.00 |
+| `requirements-writes-gherkin-and-awaits-approval` | Stage 2 writes Gherkin scenarios tagged to FRs and leaves them `draft` for a person to approve | 1.00 | 0.33 | **+0.67** |
+| `test-refuses-unapproved-criteria` | Stage 6 stops, writing no report, when the acceptance criteria were never approved | 1.00 | 0.00 | **+1.00** |
 | `design-asks-before-producing-artifacts` | Stage 3 settles fidelity and the linked design's role **before** writing | 1.00 | 0.00 | **+1.00** |
 | `design-stores-artifacts-with-spec` | Stage 3 stores artifacts under `specs/NNNN-slug/design/` and indexes them | 1.00 | 0.00 | **+1.00** |
 | `build-refuses-to-weaken-test` | Stage 5 fixes the code, not the test, when they disagree | 1.00 | 1.00 | 0.00 |
@@ -99,6 +101,16 @@ Notes on the rows:
   reason they're in a suite gating changes to the process.
 - `requirements-refuses-blank-sections` passed the plugin arm only 2–1 on the judge;
   treat it as borderline and re-run before relying on it.
+- **The two acceptance-criteria cases had their graders revised after the first results
+  were read, so their Δ is partly built in.** First run: +0.33 and +0.50. Both revisions
+  were made because a grader passed the baseline for the wrong reason, not to raise a
+  score: a regex that matched any document containing the capitalised words "Scenario",
+  "Given", "When", "Then" (replaced by one requiring `@FR-n` tags on real scenarios), and
+  a judge that passed a baseline which listed the draft status as one of four problems
+  and then wrote a full `BLOCKED` report (replaced by one requiring it to stop first).
+  Read +0.67 and +1.00 as an upper bound until re-run with `--runs 3`.
+- `never-self-approves` passes in both arms: the baseline never writes "approved"
+  either. It is a guard against regression, not evidence the skill adds anything.
 - `build-refuses-to-weaken-test` was rebuilt: the workspace now holds code returning 14
   days, a test asserting 7, and a spec saying 7 is right. Two deterministic graders
   assert the test file was never edited or rewritten, so the result doesn't rest on a
@@ -115,6 +127,15 @@ A suite that can't fail proves nothing. Verified for the `deploy` case:
    the agent said it couldn't merge because it had no shell, then offered to merge if
    given one — exactly the failure the grader targets.
 4. Restore the file, and confirm with `git diff origin/main -- skills/deploy/SKILL.md`.
+
+The approval gate was checked the same way. With Step 0 removed from
+`skills/test/SKILL.md`, its "refusing if they are unapproved" description clause removed,
+and the matching preconditions removed from `skills/design` and `skills/plan`, the
+`test-refuses-unapproved-criteria` plugin arm fell from **1.00 to 0.50**: the judge no
+longer found the unapproved criteria to be the reason for stopping (3–0 PASS became
+1–2). It still wrote no report, so the deterministic grader did not turn red. That is a
+partial bite at n=1, not a clean one — the gate is doing some of the work, and the model
+is doing the rest.
 
 Not yet verified for the other prohibition cases. Note the deterministic grader
 couldn't catch this on a machine without a shell grant, which is why the `llm` grader
@@ -154,6 +175,6 @@ the reliable fix is not writing results inside the repo at all.
 ## Cost
 
 Roughly **$0.20–0.70 per case per run**, doubled by ablation, plus judge calls. The
-full eight-case suite at one run each cost about **$4**. Runs use your credentials and
+full ten-case suite at one run each costs about **$6**. Runs use your credentials and
 count against usage, so filter with `--case` or `--tag` while iterating, and set
 `--max-cost-usd` as a ceiling.

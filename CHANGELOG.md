@@ -1,6 +1,9 @@
 # Changelog
 
-Every entry is a change advisory board release — a merge from `main` into `release`.
+Every entry is a release — a merge from `main` into `release`. That merge is the change
+advisory board's approval, and the merge commit on `release` is the record of it, so
+this file carries no approval state: no "pending", no "unreleased", no board-decision
+line. An entry exists because it shipped.
 Product repos pick these up with `/sdlc:bootstrap --relock`.
 
 Read this before relocking: it says what changed in the process you're about to run.
@@ -9,8 +12,6 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ```
 ## <version> — <YYYY-MM-DD>
-
-**Board decision:** <link to the retro report or PR>
 
 ### Changed
 - <stage or skill> — what changed and why it matters to a consuming repo
@@ -21,9 +22,36 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ---
 
-## 0.3.0 — unreleased
+## 0.3.1 — 2026-10-09
 
-**Board decision:** pending
+Documentation only. No skill, hook or eval behaviour changes, so there is nothing for a
+consuming repo to do beyond relocking.
+
+### Fixed
+
+- 0.3.0 shipped with `plugin.json` still reading `0.2.1`, so a repo that relocked got
+  0.3.0 behaviour under a 0.2.1 label. It now reads `0.3.1`.
+- The 0.3.0 entry was merged still marked "unreleased" with its board decision
+  "pending". It is now dated.
+
+### Changed
+
+- **The changelog no longer records approval state.** The `Board decision` line and the
+  `unreleased` / `pending` states are gone from every entry. They went stale in the same
+  way each time: the decision is made by the merge into `release`, and anything written
+  after that merge can only land on `main`. The merge commit on `release` is the record.
+- `CONTRIBUTING.md` release steps simplified to match: the release PR carries the version
+  bump and a dated entry, and nothing about its own outcome.
+- `evals/README.md` now includes the two cases added in 0.3.0 and the result of
+  removing the approval gate to check it bites.
+
+### Migration
+
+None.
+
+---
+
+## 0.3.0 — 2026-10-09
 
 ### Changed
 
@@ -56,7 +84,8 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ### Fixed
 
-- The 0.2.1 entry's board-decision link still read `PR #__`. It is now PR #3.
+- The 0.2.1 entry carried an unfilled `PR #__` link. The board-decision lines are removed
+  from the changelog altogether, so there is nothing left to fill in.
 
 ### Migration
 
@@ -72,8 +101,6 @@ already shipped need no change.
 ---
 
 ## 0.2.1 — 2026-10-09
-
-**Board decision:** released via [PR #3](https://github.com/wodutoit/spec-sdlc-simple/pull/3), merged into `release` as `2f3c00e`.
 
 Documentation only. No skill, hook, template or eval behaviour changes, so there is
 nothing for a consuming repo to do beyond relocking.
@@ -98,8 +125,6 @@ None.
 ---
 
 ## 0.2.0 — 2026-10-09
-
-**Board decision:** approved — [PR #2](https://github.com/wodutoit/spec-sdlc-simple/pull/2), merged into `release` as `38a1f0f`. The change itself had landed on `main` in `3ef9fc5` without its own PR.
 
 ### Changed
 
@@ -153,8 +178,6 @@ that reaches Stage 3. A repo mid-way through Stage 3 can adopt them or finish as
 ---
 
 ## 0.1.0 — 2026-09-30
-
-**Board decision:** initial release — the first commit on `release`, `3a701bf`.
 
 First release.
 
