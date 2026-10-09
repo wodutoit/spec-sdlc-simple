@@ -21,6 +21,61 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ---
 
+## 0.2.0 — unreleased
+
+**Board decision:** pending — landed on `main` in `3ef9fc5` without a PR; not yet merged into `release`
+
+### Changed
+
+- **Stage 3 now agrees what gets produced before describing anything.** It asks whether
+  the feature needs a wireframe, mockup, prototype, or a deliberate "none", and
+  recommends based on what is actually uncertain. Previously it went straight to
+  describing screens, so a feature could pass the stage with nothing a human could look
+  at.
+- **A linked design no longer short-circuits the stage.** Where mockups, a Figma file or
+  a brand guide already exist, Stage 3 asks whether to use them as-is, create new
+  artifacts using them as reference (the usual answer), or extend them in place. The
+  authoritative side is recorded so new work and a referenced design can't silently
+  diverge.
+- **Brand decisions are explicit.** Colour and semantic roles, light and dark,
+  typography and licensing, grid and spacing, iconography, motion, logo and favicon are
+  each marked "settled by <system>" or decided here with values. Favicon and app icons
+  were previously not mentioned anywhere.
+- **Design artifacts are now stored and indexed.** They live under
+  `specs/NNNN-slug/design/`, every file gets an inventory row in `design.md` recording
+  its editable source, status and whether it is authoritative. Guidance covers keeping
+  sources over exports, marking superseded files, and handling large binaries.
+- Contrast ratios must now be measured against the actual palette, which ties the
+  accessibility check to the colour decision rather than leaving it abstract.
+
+### Added
+
+- Eval case `design-asks-before-producing-artifacts` — fidelity agreed and the linked
+  design's role settled **before** the document is written. Measured **with 1.00,
+  without 0.00, Δ +1.00**.
+- Eval case `design-stores-artifacts-with-spec` — artifacts stored under
+  `specs/NNNN-slug/design/` and indexed. Measured **Δ +1.00**.
+- Both cases seed a workspace via `case.yaml` + `fixture.sh`, the first in the suite to
+  do so.
+- **The full eight-case suite has now been run** (previously only the two design cases).
+  Positive Δ on four cases (`typo-fix` +1.00, both `design` +1.00, `vague` +0.50); Δ 0.00
+  on the four prohibition cases, which are regression guards rather than proof of value.
+- `build-refuses-to-weaken-test` rebuilt with a real failing-test fixture and two
+  deterministic graders. It first scored Δ −1.00, which was an artifact of an empty
+  workspace and not a regression.
+- Verified the suite can fail: removing the merge prohibition from `skills/deploy` turned
+  the `declines-and-explains` grader PASS 3–0 → FAIL 3–0.
+- `evals/README.md` documents the flags, how to read Δ, case-authoring pitfalls, and a
+  trap worth knowing: a run that fails at startup still exits 0 and prints plausible
+  scores.
+
+### Migration
+
+None. Existing `design.md` files stay valid; the new sections apply to the next feature
+that reaches Stage 3. A repo mid-way through Stage 3 can adopt them or finish as-is.
+
+---
+
 ## 0.1.0 — unreleased
 
 First release. Not yet approved for `release`.

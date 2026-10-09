@@ -29,7 +29,7 @@ intent and requirements into durable files is what makes fast code generation sa
 |---|-------|----------|-----------|-----------------|
 | 1 | **Intent** | `intent.md` | Originator + AI | Problem and outcome stated in one paragraph each; no solution detail |
 | 2 | **Requirements** | `spec.md` | Product + team + AI | Every checklist section answered or explicitly marked N/A |
-| 3 | **Design** | `design.md` | Design + AI | Every user-facing screen/flow described; states and errors covered |
+| 3 | **Design** | `design.md` + `design/` artifacts | Design + AI | Artifact fidelity agreed; every screen/flow and state described; brand decisions resolved |
 | 4 | **Plan** | `BUILD_PLAN.md` + `build/NN-*.md` | Engineer + AI | Phases independently verifiable; each has a stated done-test |
 | 5 | **Build** | Code + checked-off plan | AI, engineer reviews | All phase checkboxes ticked; self-verification passing |
 | 6 | **Test** | `TEST_REPORT.md` | AI, engineer reviews | Stated quantifiable target met; evidence attached |
@@ -60,7 +60,12 @@ specs/
   0001-user-invites/
     intent.md            # stage 1
     spec.md              # stage 2
-    design.md            # stage 3
+    design.md            # stage 3 — describes and indexes the artifacts below
+    design/              # stage 3 — wireframes, mockups, prototype, brand, icons
+      wireframes/
+      mockups/
+      brand/
+      icons/
     BUILD_PLAN.md        # stage 4 — the phased checklist
     build/
       01-schema.md       # stage 4 — detailed build instructions per phase
@@ -303,12 +308,61 @@ questions and both need answering. Work through every state, not just the happy 
 empty, loading, partial, error, offline, too much data, first-run. Those states are
 where products feel broken.
 
-**Artifact:** `specs/NNNN-slug/design.md`
+### First, agree what gets produced
+
+This is the one stage whose output a human has to *look at*. A written description of a
+layout is not a layout. So before describing anything, **ask** what visual artifacts
+this feature needs:
+
+| Artifact | What it settles | Pick it when |
+|---|---|---|
+| **Wireframe** | Structure, hierarchy, placement. No colour or brand | The open question is *what goes on the screen* |
+| **Mockup** | The visual: brand, colour, type, spacing. Static | The open question is *how it should look* |
+| **Prototype** | Flow and interaction. Clickable, stateful | The open question is *how it should feel to use* |
+| **None** | Nothing new — the existing design system answers it | The pattern exists and is reused as-is |
+
+More than one is normal: wireframe to settle structure, mockup once it is settled.
+Recommend from what is actually uncertain rather than presenting a menu. A deliberate
+"none" is a valid answer and often the right one — don't manufacture artifacts for a
+screen that reuses an existing pattern.
+
+Then find out which **brand decisions are open** versus already settled by an existing
+system: colour palette and semantic roles, light and dark, typography and licensing,
+grid and spacing, iconography, motion, logo, and favicon.
+
+### If designs already exist, still ask
+
+A linked Figma file, an attached mockup, a brand guide, an existing screen to match —
+none of these mean this stage is done. Ask which applies:
+
+- **Use as-is** — reference it, produce nothing new.
+- **Create new, using it as reference** — new artifacts for this feature, consistent
+  with the existing work. **This is the default, and the case most often missed.**
+- **Extend it** — add to the existing file or system in place.
+
+An existing design is a reference, not a substitute for designing this feature. Ask
+even when the user has just handed over a link — especially then. Where new work and a
+referenced design disagree, record which is authoritative and why; silent divergence
+means the build matches neither.
+
+**Artifact:** `specs/NNNN-slug/design.md`, plus the visual artifacts themselves under
+`specs/NNNN-slug/design/` — see [Storing design artifacts](#storing-design-artifacts).
 
 ```markdown
 # Design: <title>
 
 **Spec:** ./spec.md
+
+## Artifacts produced
+Per artifact: fidelity (wireframe/mockup/prototype), what uncertainty it settles,
+status. Or "none — reuses <named pattern>".
+
+## Existing designs referenced
+Per source: link, how it's used (as-is / reference / extended), and whether it or
+this document is authoritative.
+
+## Artifact inventory
+Every file under design/: what it is, its editable source, status, authoritative?
 
 ## Users and context
 Who uses this, on what device, in what situation, how often, how skilled.
@@ -334,24 +388,57 @@ Exact strings for labels, buttons, empty states, errors. Errors say what happene
 and what to do next. No "an error occurred."
 
 ## Visual design
-Type scale, colour tokens, spacing, elevation, motion. Reference the existing design
-system by name. Only justify net-new tokens.
+Colour palette and semantic roles, light and dark, type families and licensing, type
+scale, spacing, grid and breakpoints, elevation, iconography, motion. Mark each
+"settled by <system>" or "decided here" with values. Only justify net-new tokens.
+
+## Logo and favicon
+Source mark, exported sizes, dark-background variant. Store the source, not only the
+exports — a 16px PNG cannot be regenerated.
 
 ## Accessibility
-Keyboard path through every flow. Focus order and visible focus. Contrast ratios.
-Screen-reader labels and live regions. Reduced-motion behaviour. Target sizes.
+Keyboard path through every flow. Focus order and visible focus. Contrast ratios
+measured against the actual palette. Screen-reader labels and live regions.
+Reduced-motion behaviour. Target sizes.
 
 ## Responsive behaviour
 What changes at each breakpoint. What is the mobile experience, specifically.
 
-## Assets
-Mockups, prototypes, Figma links. Note which is authoritative.
-
 ## Open design questions
 ```
 
-**Gate:** every user-facing screen and flow described, every state covered, copy
-written. Committed.
+### Storing design artifacts
+
+Design artifacts are part of the spec. They belong with it, not in a chat scrollback or
+someone's local folder:
+
+```
+specs/NNNN-slug/
+  design.md                  describes and indexes
+  design/
+    wireframes/  mockups/  prototype/
+    brand/                   palette, type scale, tokens
+    icons/                   favicon source + exports
+    exports/                 pulled from external tools
+```
+
+Three rules that stop this rotting:
+
+- **Keep the editable source**, not just the exported image. An export you can't edit
+  is a dead end.
+- **Mark superseded files superseded** rather than deleting them, so a build
+  referencing an old mockup finds out it's stale.
+- **Large binaries:** store externally, link in the inventory, and record that the
+  external copy is authoritative. Check whether the repo uses Git LFS first. Never let
+  the only copy live somewhere that can vanish.
+
+Every file under `design/` gets an inventory row in `design.md`. An unindexed file is
+unreviewable — nobody can tell whether it's current.
+
+**Gate:** artifact fidelity agreed, including a deliberate "none". Reuse-vs-reference
+decided for any existing design, with authority recorded. Open brand decisions resolved
+or marked settled. Every screen, flow and state described. Copy written. Contrast
+measured against the real palette. Every `design/` file indexed. Committed.
 
 ---
 
