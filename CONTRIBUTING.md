@@ -42,7 +42,12 @@ Before opening a PR: `claude plugin validate . --strict` and `claude plugin eval
 
 ## Findings from setup — don't re-derive these
 
-Verified against Claude Code **v2.1.177**. Re-check if a claim stops holding.
+Verified against Claude Code **v2.1.177**, then partly re-verified on **v2.1.295**.
+Re-check if a claim stops holding.
+
+Note on the token figures below: the always-on estimate rose from ~711 to ~1,119
+between those two versions with nine of ten skill files byte-identical, so treat the
+absolute number as version-specific. The relative cost per skill is the useful part.
 
 ### Layout is not a choice
 
@@ -123,20 +128,45 @@ way; only the typed command is in doubt.
   frontmatter silently loads empty. `claude plugin validate` catches it — always run
   it after editing frontmatter.
 
-### `claude plugin eval` is not in v2.1.177
+### `claude plugin eval` needs v2.1.295 — it is absent on v2.1.177
 
-The subcommand does not exist on this version — `claude plugin eval .` returns
-`error: unknown command 'eval'`. The suite under `evals/` is written to the documented
-format but **has never been executed**, so its graders are unverified.
+On v2.1.177, `claude plugin eval .` returns `error: unknown command 'eval'`. It works
+from **v2.1.295**. Running it taught more than reading the docs did — see
+[`evals/README.md`](evals/README.md) for the flags and the case-authoring pitfalls, and
+note in particular that **Δ is the number that matters**, not the score.
 
-Two consequences:
+All eight cases have now been run once; results and caveats are in `evals/README.md`.
+Three things worth knowing before relying on them: a run that fails at startup still
+exits 0 and prints plausible scores (check `turns`, not just the score); Δ is noisy at
+one run, so use `--runs 3` for board evidence; and four cases show Δ 0.00, which makes
+them regression guards rather than proof the skill adds value.
 
-- Upgrade Claude Code before relying on evals as a release gate, and expect to fix
-  graders on the first real run.
-- Until then, a retro report must state that evals could not be run. `/sdlc:retro`
-  already instructs this, and `templates/retro.md` has a section for it. A proposal that
-  implies evals passed when the command was unavailable is worse than one that admits
-  the gap.
+If the command is unavailable on a contributor's version, a retro report must say so
+rather than implying evals passed. `/sdlc:retro` instructs this and
+`templates/retro.md` has a section for it.
+
+### Open: `evals/` overlaps the declared skills path
+
+Every eval run warns:
+
+> `evals/` overlaps the plugin's declared skills path `"./"` — discovery reads cases
+> from a directory the plugin declares as a component location
+
+The manifest sets `"skills": ["./"]` so the root `SKILL.md` loads as the router, which
+makes the whole plugin root a component location — and `evals/` sits inside it.
+
+**Not fixed**, because the fix is a separate change: move the router to
+`skills/start/SKILL.md`, drop the `"skills": ["./"]` declaration, and let the default
+`skills/` scan cover everything. That would also settle the `/sdlc` vs `/sdlc:sdlc`
+question below, since the command would unambiguously become `/sdlc:start`. Worth doing
+as its own proposal rather than bundled into an unrelated one.
+
+### Expected: the marketplace install advisory
+
+`claude plugin validate . --strict` passes but advises adding
+`/plugin install sdlc --marketplace <owner>/<repo>` to the README. **Ignore it.** This
+plugin is distributed as a gitignored clone, not through a marketplace — that is the
+whole design. Don't "fix" it by adding an install line that doesn't work.
 
 ### Context cost
 

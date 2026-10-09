@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: design-asks-before-producing-artifacts
+tags: [smoke, design]
+context:
+  # Stage 3's input is spec.md. Without it the agent correctly stops on the missing
+  # spec and never reaches the fidelity question, so the case has to seed one.
+  # Runs only with --scaffold.
+  scaffold_script: fixture.sh
