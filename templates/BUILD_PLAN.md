@@ -40,6 +40,41 @@
 - [ ] Docs / runbook updated
 - [ ] No debug output, commented-out tests, or TODOs standing in for requirements
 
+## Impact check
+
+Every file or symbol this plan creates, modifies or deletes, checked **live**. A note never
+shortens this.
+
+**Tool:** `<impactTool.command>` at `<revision>` — or **`tool-less`** (live search only;
+lower confidence)
+
+| Changed path / symbol | Dependents found | Blind spots searched | Notes |
+|---|---|---|---|
+| | | | |
+
+**Ratchet:** <track or review tier raised? why — or "unchanged". Never lowered.>
+
+*Say "nothing found by <tool and searches>" — never "there is nothing".*
+
+## Knowledge used
+
+Omit this section when code knowledge is not enabled for the repo. Format and rules:
+`templates/code-knowledge.md`.
+
+- <area>: fresh | partial | stale | missing | unverified — used / re-verified in part /
+  ignored, and why
+
+**Notes written or updated:** <areas, or none>
+
+**Effort (self-reported — indicative, not proof):**
+
+| | Files read | Searches | Tool runs |
+|---|---|---|---|
+| Consult + trace | | | |
+| Impact check | | | |
+
+**Friction:** <none, or `knowledge-misled` entries: note, claim, what happened, correction>
+
 ## Risks during build
 
 | Risk | Mitigation | Trigger to stop and ask |

@@ -40,6 +40,22 @@ State the track and a one-line reason. Get agreement before writing.
 On track S, `intent.md` can be three lines — problem, outcome, track. Don't make
 small work expensive.
 
+## Diagnosing an incident or finding (stage 8)
+
+When the intent comes from production — an alert, a scan finding, a recurring defect — you
+diagnose before you write. Read `.claude/spec-sdlc.json` **first**, before opening anything under
+`.claude/code-knowledge/`. Where `config.codeKnowledge` is true, read
+`.claude/code-knowledge/index.md` and the matching area notes to aim the diagnosis.
+Otherwise skip this (no reading, no reliance). Rules: `${CLAUDE_PLUGIN_ROOT}/templates/code-knowledge.md`.
+
+- **Read-only.** Run the delta check and a spot-check, classify each note, and treat an
+  `unverified` or `stale` note as a hint, never a fact. Diagnosing from a stale note is
+  where it does the most damage.
+- **A note never says what is or isn't affected.** That comes from the live code and,
+  where configured, the impact tool.
+- Record `Knowledge used` in the intent (see the template), including any note that
+  turned out wrong.
+
 ## Write it
 
 Path: `specs/NNNN-slug/intent.md` — next unused four-digit sequence, kebab-case slug.

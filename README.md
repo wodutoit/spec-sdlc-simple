@@ -114,6 +114,28 @@ you only do one, do this one.
 
 ---
 
+## Knowing what a change touches
+
+Working out a change's blast radius is the most expensive thing for an AI to do by reading,
+and it gets repeated from scratch on every feature. Two pieces make it cheaper:
+
+- **A live impact check, in every repo.** Stage 4 asks, for each file or symbol the plan
+  touches, what depends on it — using an **impact tool** if you have one (a code graph, a
+  dependency analyser, a language server's find-references), and searching the places a
+  tool can't see. With no tool it falls back to search and says so (`tool-less`). Live
+  findings can raise a change's track or review tier; nothing can lower it. A CI job can
+  run the same tool on the PR, and review compares the plan's prediction with the
+  measurement. See `templates/impact-tool.md`.
+- **Code knowledge, opt-in.** Verified, per-area notes in `.claude/code-knowledge/` that
+  record *where to look*, the exact impact query, and the blind spots — never the result.
+  Each note is delta-checked and spot-checked before it's trusted, a person approves every
+  write, and the plan commits them. Bootstrap asks whether to turn it on. The rules are in
+  `templates/code-knowledge.md`.
+
+Notes aim the check; they never replace it, and a note can't tell you something is safe.
+
+---
+
 ## Staying current
 
 ```
@@ -134,6 +156,11 @@ approved for release.
 `/sdlc:retro` reads the evidence your own artifacts generate — plan amendment logs,
 recurring "Not covered" entries, findings that keep reappearing, gates that keep being
 skipped — and turns patterns into a proposal.
+
+It also reads code knowledge when it's on: whether later features in an area got cheaper,
+and any `knowledge-misled` finding — a note, or the note template, that sent work the
+wrong way. A wrong note is a repo-specific fix; a template that keeps misleading is a
+proposal for the board.
 
 It works in a git worktree, never editing the process while it's running, then hands the
 board three things together: a recommendation document with cited evidence, the actual
@@ -174,7 +201,9 @@ hooks/hooks.json          Wires both hooks — nothing to install by hand
 scripts/
   block-merge.sh          Blocks merges, force pushes, protected-branch pushes
   check-staleness.sh      Reports drift between the lock and the clone
-templates/                7 artifact skeletons, plus CLAUDE.md / REVIEW.md / settings.json
+templates/                artifact skeletons, CLAUDE.md / REVIEW.md / settings.json, and the
+                          shared docs: code-knowledge.md, area-note.md, knowledge-index.md,
+                          impact-tool.md
 evals/                    Regression guard — see evals/README.md
 retro/                    Retro recommendations, one per board proposal
 ```

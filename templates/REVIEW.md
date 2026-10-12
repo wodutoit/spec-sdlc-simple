@@ -19,6 +19,10 @@ Every PR gets all five.
    pass? Would these tests catch a regression?
 5. **Plan/diff match** — does the diff match `BUILD_PLAN.md`? Unexplained divergence
    is a finding in itself; the plan's amendment log should explain any that exists.
+   **Impact:** compare the plan's Impact check with the pipeline's impact report for the
+   PR. A dependent in the report that the plan did not list is a finding — Medium by
+   default, High if it sits on an authentication, data or public-API path. A plan marked
+   `tool-less` is lower confidence and should be reviewed as such.
 
 ## Severity
 

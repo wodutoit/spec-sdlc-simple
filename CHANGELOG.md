@@ -22,6 +22,69 @@ Read this before relocking: it says what changed in the process you're about to 
 
 ---
 
+## 0.4.0 — 2026-10-12
+
+### Added
+
+- **A live impact check in stage 4, in every repo.** For each file or symbol a plan
+  creates, modifies or deletes, the plan now finds what depends on it: the configured
+  impact tool first, then a search of the blind spots a tool can't see. With no tool it
+  falls back to live search and is marked `tool-less`, lower confidence, so a reviewer
+  knows. Recorded under **Impact check** in `BUILD_PLAN.md`.
+- **A one-way ratchet.** Live findings may raise the track or review tier; nothing,
+  including a tool or a note, may lower it. "No dependents found" is written as *nothing
+  found by this tool and these searches*, never *there is nothing*.
+- **Code knowledge, opt-in.** Verified per-area notes in `.claude/code-knowledge/` that
+  make the impact check cheaper by recording its *inputs* — where to start, the exact
+  impact query, and the blind spots — and never its result. Every note is delta-checked
+  and spot-checked before it is trusted, classified fresh / partial / stale / missing /
+  unverified, and a `verified_at` is bumped only for what was re-verified. Notes never
+  make a risk call. A person approves every write.
+- Used by four stages: **Requirements** and **Maintain** (through `/sdlc:intent`) read
+  only; **Plan** consults, then writes back after the plan is approved, in the plan
+  commit; **Build** reads and may propose marking a note `disputed`.
+- **Recording and measurement.** A `Knowledge used` entry in the artifact each stage
+  produces, with self-reported effort counts for the consult and the impact check
+  separately. The retro compares first and later features in an area and needs three
+  before concluding anything; the counts are the model grading itself, so they are
+  indicative, not proof.
+- **A `knowledge-misled` retro finding**, recording the wrong claim and the correction to
+  the note or the template that would have prevented it. A wrong note is a repo-specific
+  fix; a template that keeps misleading is a process-level proposal.
+- **Pipeline comparison.** A CI job runs the same impact tool on the PR's changed files and
+  publishes a report. Stage 7 links it, and the review's plan/diff pass flags any
+  dependent the plan missed. The job runs the deterministic tool, never an AI agent.
+- Bootstrap asks whether to enable code knowledge and for the impact command and CI report
+  location, recorded in the lock as `codeKnowledge` and `impactTool`.
+- New shared docs in `templates/`: `code-knowledge.md`, `area-note.md`,
+  `knowledge-index.md`, `impact-tool.md`.
+
+### Changed
+
+- **Track S now runs the impact check itself, at the start of stage 5.** It skips stage 4,
+  so nothing else would have checked what a small change touches, and a refactor or bug fix
+  is exactly where that matters. The result goes in the pull request description.
+- **The plan stage's behaviour changes for every repo**, opted in or not, because the impact
+  check always runs. Everything else here is gated by `codeKnowledge`.
+
+### Known gaps
+
+- The delta check, a configured tool actually running, and the CI comparison are **not
+  exercised by the eval suite**: evals on the machine this was built on cannot be granted a
+  shell. The evals cover the hard rule, the `unverified` path, the `tool-less` flag, opt-out
+  and write-back approval. Those three paths need running on a machine with a sandbox.
+- Effort counts are self-reported by the model.
+- Eval numbers are one run each. Two of the code-knowledge graders were relaxed or fixed
+  after results were seen, so the Δ for that case is an upper bound. See `evals/README.md`.
+
+### Migration
+
+None required. Existing repos are unchanged until they run `/sdlc:bootstrap --reconfigure`,
+apart from the impact check in stage 4. Add `codeKnowledge` and `impactTool` to the lock's
+`config` by reconfiguring, not by hand.
+
+---
+
 ## 0.3.1 — 2026-10-09
 
 Documentation only. No skill, hook or eval behaviour changes, so there is nothing for a

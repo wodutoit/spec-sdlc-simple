@@ -80,12 +80,13 @@ Repo-level files that support the process:
 ```
 CLAUDE.md                     # conventions, commands, architecture, how to verify
 REVIEW.md                     # what a review checks and at what severity
+.claude/code-knowledge/       # optional, committed: per-area notes (see Code knowledge)
 .claude/spec-sdlc.json        # committed: which process version this repo runs
 .claude/skills/sdlc/          # gitignored: the process itself, a clone
 ```
 
-Those last two are the split that makes this work. `CLAUDE.md`, `REVIEW.md` and
-`specs/` are **per-repo and never sync** — they hold this repo's own knowledge. The
+Those last two are the split that makes this work. `CLAUDE.md`, `REVIEW.md`,
+`specs/` and any code-knowledge notes are **per-repo and never sync** — they hold this repo's own knowledge. The
 process is a gitignored clone, so it updates with a pull instead of drifting. The
 committed lock file is what records which version of the process any given pull
 request was built under.
@@ -190,6 +191,10 @@ both positions and flag it for the decision owner.
 This is also the stage where organizational standards checks belong — the security,
 data-handling, and compliance sections below are exactly the topics that have
 standards. Check them here, before any code exists, not at review time.
+
+Where code knowledge is enabled and the feature changes existing code, read the matching
+notes (read-only) to ground sections 5 and 6 and the track questions, and record
+`Knowledge used` in the spec header. Notes cannot set or lower the track or review tier.
 
 ### Acceptance criteria are Gherkin scenarios, and a person approves them
 
@@ -518,6 +523,9 @@ next three phases land is not a phase.
 Interview the engineer on: what existing patterns to follow, what to reuse, where
 the landmines are, what order minimizes risk, what they want to review closely.
 
+**Before you design phases,** consult code knowledge where enabled, then run the live
+impact check. Both are described in [Code knowledge and the impact check](#code-knowledge-and-the-impact-check). The impact check runs in every repo.
+
 ### Artifact A: `BUILD_PLAN.md` — the phased checklist
 
 The living progress tracker. Checkboxes get ticked during stage 5.
@@ -547,6 +555,21 @@ The living progress tracker. Checkboxes get ticked during stage 5.
 - [ ] Migration tested forward and backward
 - [ ] Security tests for Tier 1 paths written
 - [ ] Docs / runbook updated
+
+## Impact check
+Tool: <command and revision> — or `tool-less` (live search only; lower confidence)
+
+| Changed path / symbol | Dependents found | Blind spots searched | Notes |
+|---|---|---|---|
+
+Ratchet: <track or tier raised, or unchanged — never lowered>
+
+## Knowledge used
+(omit if code knowledge is not enabled)
+- <area>: fresh | partial | stale | missing | unverified — used / re-verified / ignored, why
+Notes written: <areas or none>
+Effort (self-reported): files read / searches / tool runs, for consult+trace and for impact check
+Friction: <none, or knowledge-misled entries>
 
 ## Risks during build
 
@@ -593,8 +616,10 @@ The exact command, and what healthy output looks like.
 Anything that must be answered before writing this phase.
 ```
 
-**Gate:** engineer has read and approved the plan. Each phase has a done-test.
-Committed **before** implementation starts.
+**Gate:** engineer has read and approved the plan. Each phase has a done-test. The
+Impact check is recorded, honestly `tool-less` if it was, and Knowledge used is recorded
+where enabled. Any approved note write-back is in the plan commit. Committed **before**
+implementation starts.
 
 > **Why the plan is committed first:** at merge time the plan and the diff should
 > match. If they diverged, either the plan was wrong or the build wandered — both
@@ -615,12 +640,17 @@ Committed **before** implementation starts.
 3. Run the done-test yourself before claiming the phase is complete. Iterate on
    failures without being asked.
 4. **Stop and ask** when: the plan is wrong, a requirement is ambiguous, you need a
-   dependency the spec didn't list, the approach isn't working after two attempts, or
-   you're about to touch something outside the plan's file list.
+   dependency the spec didn't list, the approach isn't working after two attempts,
+   you're about to touch something outside the plan's file list, or a dependent turns up
+   that the plan's Impact check missed.
 5. Never weaken a test to make it pass. Never mock away a security control. Never
    suppress a scanner finding. If a test blocks you, the test is probably right.
 6. When the plan turns out to be wrong: update the plan file, note why, then proceed.
    The plan is a living document, but it changes deliberately and visibly.
+7. Where code knowledge is enabled, read the notes the plan used and trust each only as
+   far as its recorded status. If a claim proves false, propose marking the note
+   `disputed` and log a `knowledge-misled` entry. Track S has no plan: run the live
+   impact check before the first edit.
 
 **Artifact:** code, plus `BUILD_PLAN.md` with boxes ticked, plus any plan amendments.
 
@@ -769,6 +799,8 @@ actions and consent is per-change, not standing.
    - Review tier and what that requires
    - `TEST_REPORT.md` summary and link
    - Anything a reviewer should look at closely
+   - Impact: the pipeline's impact report if the repo publishes one, and any dependents
+     it shows that the plan's Impact check did not list
    - Breaking changes, migrations, rollback steps
    - What isn't covered by tests
 5. Then stop. Report the PR URL. Offer to address review comments.
@@ -792,7 +824,9 @@ Put this at repo root so review is consistent and the AI knows what it's checkin
 4. **Tests** — do they test behaviour or implementation? Negative cases present?
    Any security control mocked away?
 5. **Plan/diff match** — does the diff match `BUILD_PLAN.md`? Unexplained divergence
-   is a finding.
+   is a finding. Compare the plan's Impact check with the pipeline's impact report: a
+   dependent the plan did not list is a finding, High if on an auth, data or public-API
+   path.
 
 ## Severity
 
@@ -826,6 +860,10 @@ format and hand it to the service owner to triage — fix now, schedule, or dism
 Small and bounded? Propose it as a PR through the normal gates. Larger than that?
 It's a new intent and it starts at stage 1.
 
+Where code knowledge is enabled, read the matching notes (read-only) to aim the
+diagnosis, and record `Knowledge used` in the intent. A note never says what is or isn't
+affected; that comes from the live code and the impact tool.
+
 When a fix ships, add that failure class to the test suite permanently. An incident
 that can recur wasn't finished.
 
@@ -858,14 +896,21 @@ The process generates its own telemetry. Read it:
 | Stages skipped, artifacts missing | That gate is too expensive, or asks the wrong question |
 | Track vs. actual effort | Track heuristics need work |
 | Repeated stop-and-ask points | Ambiguity in a stage's instructions |
+| `Knowledge used`, first vs later features in an area | Whether notes make investigation cheaper (three features minimum) |
+| `knowledge-misled` entries, `disputed` notes | A note, or the note template, sending work the wrong way |
+| Plans marked `tool-less` | A repo running without an impact tool |
+| Dependents in the pipeline report that the plan missed | A blind spot missing from a note, or a weak impact check |
 
 One occurrence is a quirk. Three is a process problem. Cite file and feature for each
 finding — an uncited finding is an opinion, and the board should reject it.
 
 ### Two destinations
 
-- **Repo-specific** findings go to that repo's `CLAUDE.md`, as an ordinary change.
-- **Process-level** findings change the shared process and go through the board.
+- **Repo-specific** findings go to that repo's `CLAUDE.md`, or to a correction in one of
+  its code-knowledge notes, as an ordinary change.
+- **Process-level** findings change the shared process and go through the board. That
+  includes the note template: if notes keep misleading in the same way, the fix is the
+  template, not more notes.
 
 Conflating them is how a shared process accumulates one team's quirks. A retro that
 finds nothing process-level is a good outcome, not a failed one.
@@ -893,6 +938,106 @@ several changes pretending to be one, and nobody can assess it.
 
 **Artifact:** a recommendation document, a pull request, and eval output — held with
 the process, not in the product repo.
+
+---
+
+## Code knowledge and the impact check
+
+Two related things. The **impact check** is mandatory and runs in every repo. **Code
+knowledge** is optional notes that make that check cheaper.
+
+### The live impact check
+
+Before designing phases, find out what the change touches. For every file or symbol the
+plan creates, modifies or deletes:
+
+1. **Run an impact tool** if the repo has one: something that, given a file or symbol,
+   lists its callers, importers and references, and, given changed files, the affected
+   modules. It must be deterministic, machine-readable, runnable headless, scoped to the
+   paths given, and version-pinned and approved by your organisation. Examples by
+   ecosystem, **not endorsements and not verified for your stack**: Sourcegraph or CodeQL
+   across repos; dependency-cruiser or madge for JavaScript and TypeScript; `jdeps` on the
+   JVM; Bazel `rdeps` or Nx `affected` for build graphs; a language server's
+   find-references.
+2. **Search the blind spots** the tool cannot see: names built from strings, reflection,
+   config-driven wiring, schema and SQL coupling, callers in other repos.
+3. **No tool?** Fall back to live search and mark the check **`tool-less`** — lower
+   confidence, and a reviewer should know.
+4. **Record it** in `BUILD_PLAN.md` under Impact check, with the tool, the revision and
+   the result.
+
+**One-way ratchet:** live findings may *raise* the track or review tier — the change turns
+out to touch a schema, a public API or authentication. Nothing may *lower* it. "No
+dependents found" is written as *nothing found by this tool and these searches*, never as
+*there is nothing*.
+
+**In the pipeline,** a CI job runs the **same tool** on the pull request's changed files
+and publishes the report. The plan's Impact check is the *prediction*; the report is the
+*measurement* on the diff that shipped. Stage 7 links it, and the review's plan/diff pass
+flags any dependent in the report that the plan did not list. **The job runs the
+deterministic tool, never an AI agent.** Pass event values through environment variables,
+never interpolated into a shell command, and pin every action to a full commit SHA.
+
+A track S change has no plan, so it runs this check at the start of stage 5 and puts the
+result in the pull request description.
+
+### Code knowledge
+
+Checking what a change touches gets repeated from scratch on every feature. Code knowledge
+makes that live check cheaper **by aiming it**: notes record the *inputs* — where to start,
+the exact impact query, and the blind spots — and never the *result*. The blast radius is
+recomputed every time, so a note cannot go stale on it or reassure you wrongly.
+
+**Opt-in.** Only when `.claude/spec-sdlc.json` has `config.codeKnowledge: true`. Otherwise
+every stage skips this — no reading, relying on or citing a note — even if the folder
+exists. A one-line heads-up about a note a search happened to surface is fine.
+
+**Where.** `.claude/code-knowledge/index.md` (one row per area, the only file read on every
+plan) and `areas/<area>.md` (one small note per area, about 150 lines or fewer). Committed
+in the product repo, per-repo, never synced. Business intent and decision history belong in
+the team knowledge base; link to curated docs, don't mix them in; stable always-true facts
+belong in `CLAUDE.md`.
+
+**A note's header** records `area`, `summary`, `verified_at` (a commit id), `verified_on`,
+`status` (`ok` | `disputed`), `confidence`, `watched_paths` and `last_touched_by`. Its body:
+entry points, layer map, data touched, **impact query**, non-obvious couplings with
+evidence, **blind spots**, gotchas, look-here-first, related links, change log.
+
+**Keep** facts that are hard to re-derive: entry points, couplings and invariants, the
+impact query, blind spots, gotchas, pointers. **Don't keep** full caller or dependency
+lists, any impact result, anything about the current change, excerpts longer than a
+signature, wiki-only claims, or **secrets, credentials and customer or production data** —
+these are committed files.
+
+**Verify before you trust.**
+
+1. *Delta check:* has anything under `watched_paths` changed since `verified_at`
+   (`git diff --stat <verified_at> HEAD -- <paths>`)? If that can't run — no shell,
+   offline, or the commit id is gone after a squash-merge — the note is **unverified**,
+   never fresh.
+2. *Classify:* **fresh** (use as the starting map), **partial** (re-investigate the changed
+   files), **stale** (entry points moved, or `disputed`), **missing**, **unverified** —
+   the last three investigate normally and use a note only as a "where to look" hint.
+3. *Spot-check* one concrete claim in any note you rely on. A failure marks it `disputed`
+   and logs a `knowledge-misled` friction entry.
+4. *Write back* only what you re-verified this run. `verified_at` is the commit you
+   investigated against, not the one carrying the note.
+
+**Hard rules.** Notes never make a risk call. A human reviews every write, and nothing is
+committed without asking. If a note and the wiki conflict, the code wins and the
+discrepancy is surfaced. A feature that changes an area makes its own note stale by
+design.
+
+**By stage.** Requirements and Maintain read only. Plan consults, runs the impact check,
+and — **after the plan is approved** — proposes the write-back as a diff to apply or skip,
+committed in the plan commit. Build reads, and may propose marking a note `disputed`.
+Each records `Knowledge used`: notes by status, notes written, self-reported effort counts
+for the consult and the impact check separately, and any friction.
+
+**Measurement.** The retro compares effort on the first and later features in an area. The
+counts are the model grading its own effort — indicative, not proof — so it needs at least
+three features in an area before concluding anything. If later features aren't cheaper,
+fix the note template rather than adding more notes.
 
 ---
 
