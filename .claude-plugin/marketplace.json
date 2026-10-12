@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "spec-sdlc-simple",
+  "description": "A spec-driven SDLC for Claude Code: one named, committed artifact per stage.",
+  "owner": {
+    "name": "wodutoit"
+  },
+  "plugins": [
+    {
+      "name": "sdlc",
+      "description": "A spec-driven SDLC: nine stages, one named artifact per stage, committed to version control. The artifact is the handoff, and the AI never merges a pull request.",
+      "source": {
+        "source": "github",
+        "repo": "wodutoit/spec-sdlc-simple",
+        "ref": "release"
+      }
+    }
+  ]
+}

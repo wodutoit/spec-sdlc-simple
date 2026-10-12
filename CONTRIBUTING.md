@@ -39,7 +39,8 @@ Before opening a PR: `claude plugin validate . --strict` and `claude plugin eval
    entry as if it has shipped: no "unreleased", no "pending", no board-decision line.
 3. A human merges `main` into `release`. **That merge is the board's approval**, and the
    merge commit on `release` is the record of it. Nothing in the docs needs to say so.
-4. Product repos pick it up with `/sdlc:bootstrap --relock`.
+4. A GitHub Action (`.github/workflows/release.yml`) tags the merge commit `v<version>` and publishes a GitHub Release with the CHANGELOG entry as its notes. It fails if the version is not `MAJOR.MINOR.PATCH` or the CHANGELOG has no matching `## <version>` heading.
+5. Product repos pick it up with `/sdlc:bootstrap --relock`.
 
 **Why nothing in the docs records approval.** A decision written down *after* the release
 merge can only land on `main`, so `release` — the branch product repos actually clone —
