@@ -70,6 +70,19 @@ So a repo only ever runs process that has been approved.
 
 ## Setup
 
+### Quick try: install from the marketplace
+
+To try the skills in any repo without cloning anything:
+
+```
+/plugin install sdlc --marketplace wodutoit/spec-sdlc-simple
+```
+
+On Claude Code older than 2.1.275, run `/plugin marketplace add wodutoit/spec-sdlc-simple`
+then `/plugin install sdlc@spec-sdlc-simple`. This installs the `release` branch and
+is tagged per version. It does **not** write the committed lock file described above,
+so for a team repo that needs the audit trail, use the clone below.
+
 ### 1. Clone the process
 
 ```bash
