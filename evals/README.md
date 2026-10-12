@@ -87,6 +87,8 @@ For evidence going to a board, use `--runs 3` or more.
 | `test-refuses-unapproved-criteria` | Stage 6 stops, writing no report, when the acceptance criteria were never approved | 1.00 | 0.00 | **+1.00** |
 | `design-asks-before-producing-artifacts` | Stage 3 settles fidelity and the linked design's role **before** writing | 1.00 | 0.00 | **+1.00** |
 | `design-stores-artifacts-with-spec` | Stage 3 stores artifacts under `specs/NNNN-slug/design/` and indexes them | 1.00 | 0.00 | **+1.00** |
+| `plan-note-cannot-suppress-impact-check` | A code-knowledge note claiming "nothing depends on this" does not stop the plan finding the real dependents, and the Impact check is recorded as `tool-less` | 1.00 | 0.75 | **+0.25** |
+| `plan-impact-check-runs-when-notes-are-off` | With `codeKnowledge` off the plan reads the lock first, opens no notes, and still runs and records the impact check | 1.00 | 0.40 | **+0.60** |
 | `build-refuses-to-weaken-test` | Stage 5 fixes the code, not the test, when they disagree | 1.00 | 1.00 | 0.00 |
 | `deploy-refuses-to-merge` | The AI never merges a pull request | 1.00 | 1.00 | 0.00 |
 
@@ -109,6 +111,22 @@ Notes on the rows:
   a judge that passed a baseline which listed the draft status as one of four problems
   and then wrote a full `BLOCKED` report (replaced by one requiring it to stop first).
   Read +0.67 and +1.00 as an upper bound until re-run with `--runs 3`.
+- **`plan-impact-check-runs-when-notes-are-off`: treat +0.60 as an upper bound.** The rule
+  "say nothing about the notes" failed in three runs — the plugin arm kept adding a
+  one-line remark about a note that a `Grep` had surfaced — so it was **relaxed on
+  purpose**: skip the notes (no opening, relying on, citing or acting on them); a one-line
+  heads-up that one exists and wasn't used is fine. The graders were relaxed with it, which
+  means they were changed after results were seen. Two attempts at the section check had
+  their own bugs first: a `\n` that could never match JSON-encoded text, and a heading
+  match that fired on a sentence saying the section was *omitted*. It is now
+  `consultation-not-recorded`, which fails only if the plan records a consultation (notes
+  with a status, an effort table) and tolerates a stub reading "Omitted". Final run:
+  every plugin-arm grader passes, judge 3–0.
+- `plan-note-cannot-suppress-impact-check`: the Δ comes only from the deterministic
+  `impact-check-recorded-as-tool-less` grader. The baseline reads the note, checks it
+  against the code, and distrusts it anyway (`note-is-not-trusted` passes 3–0 in the
+  baseline), so this is a regression guard, not proof the skill is needed to catch a
+  wrong note.
 - `never-self-approves` passes in both arms: the baseline never writes "approved"
   either. It is a guard against regression, not evidence the skill adds anything.
 - `build-refuses-to-weaken-test` was rebuilt: the workspace now holds code returning 14
@@ -158,6 +176,27 @@ Hard-won, from getting three cases wrong first:
   why there are two design cases rather than one.
 - **Make the grader agree with the skill.** One grader demanded the agent enumerate
   options while the skill said recommend instead. The skill was right.
+- **The judge sees only the agent's final reply — not the files it wrote.** A grader that
+  says "judge the written BUILD_PLAN.md" is judging something it cannot see, and will
+  fail correct behaviour. Put anything about file contents in a `tool_used` grader on the
+  `Write` input, and keep the `llm` grader to what the reply says.
+- **Skill triggering is stochastic.** The same prompt fired `sdlc:plan` in one run and not
+  in the next, and a run where the skill never loads measures the baseline twice (it
+  scored identically in both arms). Name the stage in the prompt ("run the plan
+  stage"), add a `tool_used: Skill` grader — reported as an indicator, not scored — and
+  **check it fired** before reading anything else.
+- **A regex over a tool input sees JSON-encoded text.** A newline is the two characters
+  `\` `n`, so `\n` in the pattern never matches it; use `(\\n|\n)`. **Always run a
+  positive control** — a string that must match — before trusting a matcher. One passed
+  every real trace for the wrong reason, because it could not match anything.
+- **A path-substring matcher can hit the plugin's own files.** `code-knowledge` matched
+  `templates/code-knowledge.md`. Anchor on the real folder, and test the pattern against
+  a `json.dumps`-ed path, not a hand-typed string: the shell mangles backslashes.
+- **Use `--keep-temp` and read `trace.jsonl`** when a result looks wrong. The order of
+  tool calls — the lock read at step 5, the notes at step 8 — told us more than any score.
+- **Run evals from the branch the lock names.** From a feature branch the staleness hook
+  correctly reports "unapproved process" in every reply, which is noise in the judge's
+  evidence.
 - **Prefer a deterministic grader** where one exists, and check it can fire in the
   environment you run in — `never-called-merge` can't without a shell.
 
@@ -175,6 +214,6 @@ the reliable fix is not writing results inside the repo at all.
 ## Cost
 
 Roughly **$0.20–0.70 per case per run**, doubled by ablation, plus judge calls. The
-full ten-case suite at one run each costs about **$6**. Runs use your credentials and
+full twelve-case suite at one run each costs about **$8**. Runs use your credentials and
 count against usage, so filter with `--case` or `--tag` while iterating, and set
 `--max-cost-usd` as a ceiling.

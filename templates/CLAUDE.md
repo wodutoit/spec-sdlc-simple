@@ -55,6 +55,8 @@ the process this repo runs, and its `config` block holds our per-repo answers.
 - The stage's artifact is the handoff. No artifact, no stage completion.
 - Start with `/sdlc` if you're unsure which stage applies.
 - Review policy: `REVIEW.md`.
+- Code knowledge, if enabled, lives in `.claude/code-knowledge/`. Notes are hints to
+  verify, never facts, and never a reason to skip the live impact check.
 - Update the process with `/sdlc:bootstrap --relock` — never by editing the clone.
 - Ask before committing. Ask before opening a PR.
 - **The AI never merges a pull request.**

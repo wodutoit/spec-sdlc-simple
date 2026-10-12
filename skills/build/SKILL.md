@@ -9,6 +9,15 @@ description: Stage 5 of the spec-driven SDLC. Use when BUILD_PLAN.md exists with
 
 **Read first:** `BUILD_PLAN.md`, then only the current phase's `build/NN-*.md`.
 
+## Track S — no plan, so run the impact check yourself
+
+A small change skips stage 4, so nothing has checked what it touches — and a refactor or
+bug fix is exactly where that matters. Before the first edit, run the live impact check
+as the plan skill describes it (`${CLAUDE_PLUGIN_ROOT}/templates/impact-tool.md`): the
+configured tool if there is one, the blind spots, and an honest `tool-less` if not. Put
+the result in the pull request description. Live findings may raise the track; if the
+change turns out to touch a schema, public API or authentication, stop and re-track.
+
 ## The loop
 
 1. Pick the lowest-numbered phase with unticked boxes.
@@ -28,8 +37,24 @@ Do not start phase N+1 until phase N's done test passes.
 - You need a dependency the spec didn't list.
 - The approach hasn't worked after two genuine attempts.
 - You're about to touch a file outside the phase's file list.
+- **A dependent turns up that the plan's Impact check missed.** The plan is wrong: say
+  so, log it in the plan's amendments, and add a `knowledge-misled` entry if a note
+  was relied on.
 
 Stopping to ask is cheap. Building the wrong thing confidently is not.
+
+## Code knowledge — when enabled
+
+**Read `.claude/spec-sdlc.json` first** — before you open anything under
+`.claude/code-knowledge/` — and go on only if `config.codeKnowledge` is `true`. Otherwise skip this (no reading, no reliance). Rules: `${CLAUDE_PLUGIN_ROOT}/templates/code-knowledge.md`.
+
+- Read the notes the plan's **Knowledge used** section lists, and trust each only as far as
+  its recorded status — an `unverified` or `stale` note is a hint, not a fact.
+- **If a claim in a note proves false while you build,** say so, propose marking that note
+  `status: disputed` (show the diff; a person approves), and add a `knowledge-misled`
+  entry to Knowledge used. That is the only write you make to a note.
+- A note never changes the plan's Impact check, and never tells you a file is safe to
+  touch. If a note and the code disagree, the code wins.
 
 ## Never
 

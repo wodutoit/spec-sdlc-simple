@@ -38,3 +38,9 @@ growing without anyone deciding to grow it.>
 
 <Each needs an owner before stage 2 can complete. Unowned questions become
 surprises during build.>
+
+## Knowledge used
+
+<Incident or finding intents only, and only when code knowledge is enabled. Which area
+notes the diagnosis consulted, their status (fresh / partial / stale / missing /
+unverified), and any that turned out wrong. Omit otherwise.>

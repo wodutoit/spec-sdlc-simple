@@ -3,6 +3,7 @@
 **Status:** draft | in review | accepted
 **Intent:** ./intent.md
 **Decision owners:** <who signs off on what>
+**Knowledge used:** <code-knowledge areas consulted and their status, or "none" — omit if code knowledge is not enabled>
 
 > Every section gets an answer or an explicit `N/A because…`. A blank section is an
 > unanswered question wearing a disguise.

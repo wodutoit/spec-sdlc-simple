@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: plan-note-cannot-suppress-impact-check
+tags: [plan, impact, code-knowledge]
+context:
+  scaffold_script: fixture.sh

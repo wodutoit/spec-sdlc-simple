@@ -36,6 +36,10 @@ run the merge.
    - Review tier, and what that tier requires
    - `TEST_REPORT.md` summary and link
    - What a reviewer should look at closely
+   - **Impact:** if `config.impactTool.ciReport` is set, link the pipeline's impact report
+     for this PR, and list any dependents it shows that the plan's **Impact check** did
+     not. If the report isn't there yet, say so rather than omitting the line. If the
+     plan was `tool-less`, say that too.
    - Breaking changes, migrations, rollback steps
    - What isn't covered by tests
 5. **Stop.** Report the PR URL. Offer to address review comments.
@@ -51,6 +55,9 @@ between `BUILD_PLAN.md` and the actual diff is itself a finding.
 A finding that has now appeared three times belongs in `CLAUDE.md` as a rule.
 
 ## Never
+
+- Never run an AI agent in the pipeline to produce the impact report. The job runs
+  the deterministic tool; you only link and read what it publishes.
 
 - Never deploy code that isn't committed and pushed — no scp, rsync, manual copy, or
   local `kubectl apply` to a shared environment.

@@ -44,6 +44,10 @@ The process generates its own telemetry. Read it rather than asking how people f
 | Stages skipped, artifacts missing | That gate is too expensive, or asks the wrong question |
 | Track vs. actual effort | Started S, should have been L → track heuristics need work |
 | Repeated stop-and-ask points | Ambiguity in a skill |
+| `Knowledge used` in `BUILD_PLAN.md`, first vs later features in an area | Whether notes are making investigation cheaper |
+| `knowledge-misled` entries and `disputed` notes | A note, or the note template, sending work the wrong way |
+| Plans marked `tool-less` | A repo running without an impact tool |
+| Dependents in the pipeline's impact report that the plan's Impact check missed | A blind spot missing from a note, or a weak impact check |
 
 Cite specifics — file, feature, line. A finding without a citation is an opinion, and
 CAB should reject it.
@@ -55,9 +59,28 @@ problem; the same thing three times is.
 
 Two buckets, and conflating them is how a shared process accumulates one team's quirks:
 
-- **Repo-specific** → that repo's `CLAUDE.md`. Handle these directly, in the product
-  repo, as an ordinary change.
-- **Process-level** → the skills, upstream. These go through CAB.
+- **Repo-specific** → that repo's `CLAUDE.md`, or a correction to one of its code-knowledge
+  notes. Handle these directly, in the product repo, as an ordinary change.
+- **Process-level** → the skills, upstream. These go through CAB. That includes
+  `templates/code-knowledge.md`, `area-note.md`, `knowledge-index.md` and
+  `impact-tool.md`: if notes keep misleading in the same way, the fix is the template.
+
+### Code knowledge in the retro
+
+Only when `config.codeKnowledge` is true; otherwise skip these rows and say so.
+
+- **Compare effort, per area.** Using the self-reported counts in each feature's
+  `Knowledge used`, compare the first feature in an area with later ones. **Don't conclude
+  anything from fewer than three features in an area.** The counts are the model reporting
+  its own effort — indicative, not proof.
+- **If later features aren't visibly cheaper, fix the note template, don't add more notes.**
+- **`knowledge-misled`** is a finding type. Record the note, the wrong claim, and the
+  correction that would have prevented it. A wrong claim is a repo-specific fix to the
+  note. The same kind of mistake across notes is a process-level fix to the template.
+- **Tool-less plans and missed dependents** point at the impact check, not the notes: a
+  repo that keeps planning `tool-less` should be asked why.
+
+Pruning is not the retro's job — the plan's write-back proposes it for the area it touches.
 
 If everything lands in the first bucket, say so and stop. A retro with no process
 finding is a good outcome, not a failed one.

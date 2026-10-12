@@ -56,6 +56,14 @@ The lock file below is what gives the product repo an audit record.
 - **The one test command** and what its healthy output looks like — this feeds
   `CLAUDE.md` and spec §7, and without it stage 5 can't self-verify.
 - **Default review tier** for this repo (1–4).
+- **Code knowledge notes?** Whether this repo keeps verified, per-area investigation
+  notes under `.claude/code-knowledge/`. Explain it in one sentence: notes that aim the
+  impact check, never replace it. Opt-in; the answer is recorded.
+- **An impact tool** — the exact command that lists a file's or symbol's dependents,
+  with `{paths}` where changed paths go — and **where the pipeline publishes its
+  impact report**, if it does. Both optional. **Never guess a command:** ask, or record
+  null. If they have none, say a tool would make the plan's impact check cheaper and
+  point at `${CLAUDE_PLUGIN_ROOT}/templates/impact-tool.md`; don't push.
 
 **3. Write `.claude/spec-sdlc.json`** — committed. This file is load-bearing: an
 in-place plugin has no version identity that Claude Code records, so this lock is the
@@ -72,7 +80,9 @@ in-place plugin has no version identity that Claude Code records, so this lock i
     "protectedBranches": ["main"],
     "testCommand": "make test",
     "healthyOutput": "...",
-    "defaultReviewTier": 3
+    "defaultReviewTier": 3,
+    "codeKnowledge": false,
+    "impactTool": { "command": null, "ciReport": null }
   }
 }
 ```
@@ -86,6 +96,9 @@ Read the real values from the clone — never invent the SHA.
   usually holds real knowledge.
 - `REVIEW.md` from `${CLAUDE_PLUGIN_ROOT}/templates/REVIEW.md`, with the review tier
   and protected branches filled in from the interview.
+- If code knowledge is on: `.claude/code-knowledge/index.md` from
+  `${CLAUDE_PLUGIN_ROOT}/templates/knowledge-index.md` (an empty table). These are
+  **committed**, not gitignored — they belong to this repo, not to the process clone.
 
 **5. Offer the permission entries.** `plugin.json` cannot carry permissions, so the
 hook is the enforcement layer and these are belt-and-braces. Offer to merge
@@ -135,6 +148,8 @@ unapproved process, and pulling would entrench it.
 ## Reconfigure
 
 Re-run the interview only. Preserve `commit` and `pulled` exactly. Update `config`,
+including switching code knowledge on or off — turning it off stops the stages using
+the notes but **keeps** them, and turning it on seeds the index if absent —
 and propagate anything that changed into `CLAUDE.md` and `REVIEW.md`. Ask before
 committing.
 

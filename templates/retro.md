@@ -32,6 +32,7 @@ occurrence is a quirk, three is a process problem.>
 
 **Evidence:** E1, E3
 **Type:** process-level | repo-specific
+**Friction type:** knowledge-misled | — *(code-knowledge findings only)*
 **Stage affected:** <n>
 
 <What the evidence means. Why the current guidance produces this outcome.>

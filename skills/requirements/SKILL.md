@@ -41,6 +41,22 @@ These are the ones that cause rework when they're waved through:
 This is where organizational standards checks belong — before code exists, not at
 review time.
 
+## Code knowledge — read-only, when enabled
+
+**Read `.claude/spec-sdlc.json` first** — before you open anything under
+`.claude/code-knowledge/` — and go on only if `config.codeKnowledge` is `true`. Otherwise skip this (no reading, no reliance). Rules: `${CLAUDE_PLUGIN_ROOT}/templates/code-knowledge.md`.
+
+For features that change existing code, read `.claude/code-knowledge/index.md` and the
+matching area notes to ground §5 (stack), §6 (interfaces and schema) and the track
+questions in verified facts instead of fresh guesses. Run the delta check and a
+spot-check, classify each note, and rely on it only as far as its status allows.
+
+Record one line in the spec's header: `Knowledge used: <areas and status, or none>`.
+
+**Notes cannot set or lower the track or review tier.** Whether a change touches a schema,
+a public API, or authentication is read from the live code. A note saying an area is
+simple or isolated changes nothing here. You write no notes at this stage.
+
 ## §12 — acceptance criteria are Gherkin scenarios
 
 Not a checklist. Scenarios in `Given / When / Then`, because they are the contract the
